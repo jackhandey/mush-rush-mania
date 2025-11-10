@@ -116,12 +116,21 @@ export const GameCanvas = () => {
       });
       
       setMossPads(pads => {
-        const scrolled = pads.map(p => ({ 
-          ...p, 
-          x: p.x - worldScrollSpeed * 0.1,
-          // Add vertical bobbing motion using sine wave
-          angle: (p.angle + p.speed) % 360,
-        }));
+        const scrolled = pads.map(p => {
+          // Update angle for bobbing motion
+          const newAngle = (p.angle + p.speed) % 360;
+          // Calculate vertical position using sine wave (bobs 5% up and down)
+          const baseY = 75;
+          const verticalOffset = Math.sin(newAngle * Math.PI / 180) * 5;
+          
+          return {
+            ...p, 
+            x: p.x - worldScrollSpeed * 0.1,
+            y: baseY + verticalOffset, // Actually update y position
+            angle: newAngle,
+          };
+        });
+        
         // Remove off-screen pads and add new ones on the right
         const visible = scrolled.filter(p => p.x > -20);
         while (visible.length < 8) {
@@ -274,35 +283,30 @@ export const GameCanvas = () => {
             />
           ))}
           
-          {/* Moss Pads with vertical movement */}
-          {mossPads.map((pad, i) => {
-            // Calculate vertical offset using sine wave
-            const verticalOffset = Math.sin(pad.angle * Math.PI / 180) * 3; // Bobs 3% up and down
-            
-            return (
-              <div
-                key={`pad-${i}`}
-                className="absolute transition-all"
+          {/* Moss Pads - now actually moving! */}
+          {mossPads.map((pad, i) => (
+            <div
+              key={`pad-${i}`}
+              className="absolute transition-none"
+              style={{
+                left: `${pad.x}%`,
+                top: `${pad.y}%`,
+              }}
+            >
+              <div 
+                className="bg-game-moss border-2 border-primary rounded-full shadow-lg shadow-primary/50"
                 style={{
-                  left: `${pad.x}%`,
-                  top: `${pad.y + verticalOffset}%`,
+                  width: `${pad.width}vw`,
+                  height: `${pad.height}vh`,
                 }}
-              >
-                <div 
-                  className="bg-game-moss border-2 border-primary rounded-full shadow-lg shadow-primary/50"
-                  style={{
-                    width: `${pad.width}vw`,
-                    height: `${pad.height}vh`,
-                  }}
-                />
-                {score < 3 && (
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-primary whitespace-nowrap bg-background/80 px-2 py-1 rounded">
-                    LAND HERE
-                  </div>
-                )}
-              </div>
-            );
-          })}
+              />
+              {score < 3 && (
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-primary whitespace-nowrap bg-background/80 px-2 py-1 rounded">
+                  LAND HERE
+                </div>
+              )}
+            </div>
+          ))}
         </>
       )}
 
