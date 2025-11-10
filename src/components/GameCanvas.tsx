@@ -139,13 +139,16 @@ export const GameCanvas = () => {
           setScore(s => s + 1);
           toast.success('BOING!', { duration: 500 });
           
-          // Scroll everything left and spawn new ones on the right
+          // Scroll everything left by a full segment (24 units)
+          const scrollAmount = 24;
+          
           setObstacles(obs => {
-            const shifted = obs.map(o => ({ ...o, x: o.x - 24 })).filter(o => o.x > -20);
-            // Add new obstacle on the right if needed
-            if (shifted.length < 5) {
+            const shifted = obs.map(o => ({ ...o, x: o.x - scrollAmount })).filter(o => o.x > -20);
+            // Add new obstacles on the right
+            while (shifted.length < 7) {
+              const lastX = shifted.length > 0 ? Math.max(...shifted.map(o => o.x)) : 50;
               shifted.push({
-                x: 90,
+                x: lastX + 18,
                 y: 35,
                 width: 13.5,
                 height: 7.2,
@@ -155,11 +158,12 @@ export const GameCanvas = () => {
           });
           
           setMossPads(pads => {
-            const shifted = pads.map(p => ({ ...p, x: p.x - 24 })).filter(p => p.x > -20);
-            // Add new moss pad on the right if needed
-            if (shifted.length < 5) {
+            const shifted = pads.map(p => ({ ...p, x: p.x - scrollAmount })).filter(p => p.x > -20);
+            // Add new moss pads on the right
+            while (shifted.length < 6) {
+              const lastX = shifted.length > 0 ? Math.max(...shifted.map(p => p.x)) : 50;
               shifted.push({
-                x: 90,
+                x: lastX + 24,
                 y: 75,
                 width: 19.5,
                 height: 4.8,
@@ -171,7 +175,8 @@ export const GameCanvas = () => {
           });
           
           launch();
-          return { x: newX, y: landedPad.y - 5 };
+          // Keep mushroom in playable area by moving it back left
+          return { x: Math.max(10, newX - scrollAmount), y: landedPad.y - 5 };
         }
         
         return { x: newX, y: newY };
