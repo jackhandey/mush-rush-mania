@@ -24,14 +24,16 @@ export const GameCanvas = () => {
   const [isDropping, setIsDropping] = useState(false);
   const [obstacles, setObstacles] = useState<GameObject[]>([]);
   const [mossPads, setMossPads] = useState<MossPad[]>([]);
+  const [worldScrollSpeed, setWorldScrollSpeed] = useState(0);
   const gameLoopRef = useRef<number>();
 
   const startGame = () => {
     setShowTutorial(false);
     setGameState('playing');
     setScore(0);
-    setMushroomPos({ x: 10, y: 75 }); // Start on bottom left
+    setMushroomPos({ x: 50, y: 75 }); // Center of screen
     setIsDropping(false);
+    setWorldScrollSpeed(2); // Start scrolling
     initializeObstacles();
     launch();
   };
@@ -40,27 +42,25 @@ export const GameCanvas = () => {
     const newObstacles: GameObject[] = [];
     const newMossPads: MossPad[] = [];
     
-    // Create initial obstacles across the screen
-    for (let i = 0; i < 7; i++) {
-      if (i % 2 === 0) {
-        newObstacles.push({
-          x: 15 + (i * 18),
-          y: 35,
-          width: 13.5, // Slightly harder from 13
-          height: 7.2,  // Slightly harder from 7
-        });
-      }
+    // Create background scenery (logs/trees) scattered across the view
+    for (let i = 0; i < 10; i++) {
+      newObstacles.push({
+        x: i * 15,
+        y: 10 + Math.random() * 50, // Scattered at different heights
+        width: 12,
+        height: 6,
+      });
     }
     
-    // Create initial moss pads
-    for (let i = 0; i < 6; i++) {
+    // Create moss pads at the bottom - these are what you land on
+    for (let i = 0; i < 8; i++) {
       newMossPads.push({
-        x: 20 + (i * 24),
+        x: i * 20,
         y: 75,
-        width: 19.5, // Slightly smaller from 20
-        height: 4.8,  // Slightly smaller from 5
+        width: 19.5,
+        height: 4.8,
         angle: i * 45,
-        speed: 0.16, // Slightly faster from 0.15
+        speed: 0.16,
       });
     }
     
@@ -69,8 +69,8 @@ export const GameCanvas = () => {
   };
 
   const launch = () => {
-    // Strong upward launch to arc through obstacles
-    setVelocity({ x: 5, y: -12 });
+    // Simple upward launch - no horizontal movement needed
+    setVelocity({ x: 0, y: -12 });
     setIsDropping(false);
   };
 
@@ -98,9 +98,44 @@ export const GameCanvas = () => {
     if (gameState !== 'playing') return;
 
     const gameLoop = () => {
+      // Scroll the world continuously
+      setObstacles(obs => {
+        const scrolled = obs.map(o => ({ ...o, x: o.x - worldScrollSpeed * 0.1 }));
+        // Remove off-screen obstacles and add new ones on the right
+        const visible = scrolled.filter(o => o.x > -20);
+        while (visible.length < 10) {
+          const lastX = visible.length > 0 ? Math.max(...visible.map(o => o.x)) : 100;
+          visible.push({
+            x: lastX + 15,
+            y: 10 + Math.random() * 50,
+            width: 12,
+            height: 6,
+          });
+        }
+        return visible;
+      });
+      
+      setMossPads(pads => {
+        const scrolled = pads.map(p => ({ ...p, x: p.x - worldScrollSpeed * 0.1 }));
+        // Remove off-screen pads and add new ones on the right
+        const visible = scrolled.filter(p => p.x > -20);
+        while (visible.length < 8) {
+          const lastX = visible.length > 0 ? Math.max(...visible.map(p => p.x)) : 100;
+          visible.push({
+            x: lastX + 20,
+            y: 75,
+            width: 19.5,
+            height: 4.8,
+            angle: Math.random() * 360,
+            speed: 0.16,
+          });
+        }
+        return visible;
+      });
+      
       setMushroomPos(prev => {
-        // When dropping, lock horizontal movement to go straight down
-        let newX = isDropping ? prev.x : prev.x + velocity.x * 0.1;
+        // Mushroom stays centered, world moves
+        let newX = prev.x;
         let newY = prev.y + velocity.y * 0.1;
         
         // Slightly slower gravity for more control
@@ -108,24 +143,16 @@ export const GameCanvas = () => {
           setVelocity(v => ({ ...v, y: v.y + 0.55 })); // Reduced from 0.6
         }
         
-        // Check boundaries
-        if (newY > 95 || newY < 0 || newX > 95 || newX < 0) {
+        // Check boundaries - only top and bottom matter now
+        if (newY > 95 || newY < 0) {
           setGameState('crashed');
+          setWorldScrollSpeed(0);
           toast.error(`Crashed! Score: ${score}`, { duration: 2000 });
           return prev;
         }
         
-        // Check collision with obstacles - smaller hitbox for mushroom
-        const mushroomBox = { x: newX + 1, y: newY + 1, width: 3, height: 3 }; // Smaller from 5x5
-        const hitObstacle = obstacles.some(obs =>
-          checkCollision(mushroomBox, obs)
-        );
-        
-        if (hitObstacle) {
-          setGameState('crashed');
-          toast.error(`THWACK! Score: ${score}`, { duration: 2000 });
-          return prev;
-        }
+        // Check collision with mushroom hitbox
+        const mushroomBox = { x: newX + 1, y: newY + 1, width: 3, height: 3 };
         
         // Check landing on moss pad
         let landedPad: MossPad | null = null;
@@ -138,54 +165,16 @@ export const GameCanvas = () => {
         if (landedPad && isDropping) {
           setScore(s => s + 1);
           toast.success('BOING!', { duration: 500 });
-          
-          // Scroll everything left by a full segment (24 units)
-          const scrollAmount = 24;
-          
-          setObstacles(obs => {
-            const shifted = obs.map(o => ({ ...o, x: o.x - scrollAmount })).filter(o => o.x > -20);
-            // Add new obstacles on the right
-            while (shifted.length < 7) {
-              const lastX = shifted.length > 0 ? Math.max(...shifted.map(o => o.x)) : 50;
-              shifted.push({
-                x: lastX + 18,
-                y: 35,
-                width: 13.5,
-                height: 7.2,
-              });
-            }
-            return shifted;
-          });
-          
-          setMossPads(pads => {
-            const shifted = pads.map(p => ({ ...p, x: p.x - scrollAmount })).filter(p => p.x > -20);
-            // Add new moss pads on the right
-            while (shifted.length < 6) {
-              const lastX = shifted.length > 0 ? Math.max(...shifted.map(p => p.x)) : 50;
-              shifted.push({
-                x: lastX + 24,
-                y: 75,
-                width: 19.5,
-                height: 4.8,
-                angle: Math.random() * 360,
-                speed: 0.16,
-              });
-            }
-            return shifted;
-          });
-          
           launch();
-          // Keep mushroom in playable area by moving it back left
-          return { x: Math.max(10, newX - scrollAmount), y: landedPad.y - 5 };
+          return { x: newX, y: landedPad.y - 5 };
         }
         
         return { x: newX, y: newY };
       });
       
-      // Update moss pads
+      // Update moss pads animation (wiggling)
       setMossPads(pads => pads.map(pad => ({
         ...pad,
-        x: pad.x + Math.cos(pad.angle * Math.PI / 180) * pad.speed * 0.1,
         angle: (pad.angle + 1) % 360,
       })));
       
@@ -281,11 +270,11 @@ export const GameCanvas = () => {
             <Grumblecap isDropping={isDropping} isCrashed={false} />
           </div>
           
-          {/* Obstacles */}
+          {/* Background Scenery (logs/trees flying by) */}
           {obstacles.map((obs, i) => (
             <div
               key={`obs-${i}`}
-              className="absolute bg-game-log border-2 border-accent rounded-lg"
+              className="absolute bg-game-log border-2 border-accent rounded-lg opacity-60"
               style={{
                 left: `${obs.x}%`,
                 top: `${obs.y}%`,
