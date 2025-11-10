@@ -40,29 +40,27 @@ export const GameCanvas = () => {
     const newObstacles: GameObject[] = [];
     const newMossPads: MossPad[] = [];
     
-    // Create obstacles (logs) in the MIDDLE where mushroom arcs through
-    // Leave gaps for the player to drop through
+    // Create obstacles (logs) - slightly smaller
     for (let i = 0; i < 5; i++) {
-      // Skip every other position to create gaps
       if (i % 2 === 0) {
         newObstacles.push({
           x: 15 + (i * 18),
-          y: 35, // Middle of screen where arc peaks
-          width: 15,
-          height: 8,
+          y: 35,
+          width: 13, // Reduced from 15
+          height: 7,  // Reduced from 8
         });
       }
     }
     
-    // Create moss pads at the BOTTOM for landing
+    // Create moss pads - larger and more forgiving
     for (let i = 0; i < 4; i++) {
       newMossPads.push({
         x: 20 + (i * 24),
-        y: 75, // Bottom of screen
-        width: 18,
-        height: 4,
+        y: 75,
+        width: 20, // Increased from 18
+        height: 5,  // Increased from 4
         angle: i * 45,
-        speed: 0.2,
+        speed: 0.15, // Slower movement
       });
     }
     
@@ -91,7 +89,7 @@ export const GameCanvas = () => {
     
     if (gameState === 'playing' && !isDropping) {
       setIsDropping(true);
-      setVelocity({ x: 0, y: 15 }); // Fast drop
+      setVelocity({ x: 0, y: 13 }); // Slightly slower drop (was 15)
       toast('THWACK!', { duration: 500 });
     }
   };
@@ -105,9 +103,9 @@ export const GameCanvas = () => {
         let newX = isDropping ? prev.x : prev.x + velocity.x * 0.1;
         let newY = prev.y + velocity.y * 0.1;
         
-        // Strong gravity for arc physics
+        // Slightly slower gravity for more control
         if (!isDropping) {
-          setVelocity(v => ({ ...v, y: v.y + 0.6 }));
+          setVelocity(v => ({ ...v, y: v.y + 0.55 })); // Reduced from 0.6
         }
         
         // Check boundaries
@@ -117,9 +115,9 @@ export const GameCanvas = () => {
           return prev;
         }
         
-        // Check collision with obstacles
-        const mushroomBox = { x: newX, y: newY, width: 5, height: 5 };
-        const hitObstacle = obstacles.some(obs => 
+        // Check collision with obstacles - smaller hitbox for mushroom
+        const mushroomBox = { x: newX + 1, y: newY + 1, width: 3, height: 3 }; // Smaller from 5x5
+        const hitObstacle = obstacles.some(obs =>
           checkCollision(mushroomBox, obs)
         );
         
