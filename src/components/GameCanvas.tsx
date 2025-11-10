@@ -30,7 +30,7 @@ export const GameCanvas = () => {
     setShowTutorial(false);
     setGameState('playing');
     setScore(0);
-    setMushroomPos({ x: 10, y: 50 }); // Start on left side, middle height
+    setMushroomPos({ x: 10, y: 75 }); // Start on bottom left
     setIsDropping(false);
     initializeObstacles();
     launch();
@@ -40,26 +40,29 @@ export const GameCanvas = () => {
     const newObstacles: GameObject[] = [];
     const newMossPads: MossPad[] = [];
     
-    // Create obstacles (logs) in the UPPER area where mushroom flies
-    for (let i = 0; i < 4; i++) {
-      newObstacles.push({
-        x: 20 + (i * 20),
-        y: 10 + (i * 8), // Upper half of screen
-        width: 18,
-        height: 6,
-      });
+    // Create obstacles (logs) in the MIDDLE where mushroom arcs through
+    // Leave gaps for the player to drop through
+    for (let i = 0; i < 5; i++) {
+      // Skip every other position to create gaps
+      if (i % 2 === 0) {
+        newObstacles.push({
+          x: 15 + (i * 18),
+          y: 35, // Middle of screen where arc peaks
+          width: 15,
+          height: 8,
+        });
+      }
     }
     
-    // Create moss pads in LOWER area where mushroom should land
-    // Position them directly below the flight path gaps
+    // Create moss pads at the BOTTOM for landing
     for (let i = 0; i < 4; i++) {
       newMossPads.push({
-        x: 15 + (i * 22), // Offset to be below gaps in obstacles
-        y: 50 + (i * 10), // Lower half of screen
-        width: 16,
-        height: 3,
-        angle: i * 90,
-        speed: 0.3 + (i * 0.1),
+        x: 20 + (i * 24),
+        y: 75, // Bottom of screen
+        width: 18,
+        height: 4,
+        angle: i * 45,
+        speed: 0.2,
       });
     }
     
@@ -68,8 +71,8 @@ export const GameCanvas = () => {
   };
 
   const launch = () => {
-    // Launch horizontally with slight upward arc
-    setVelocity({ x: 4, y: -3 });
+    // Strong upward launch to arc through obstacles
+    setVelocity({ x: 5, y: -12 });
     setIsDropping(false);
   };
 
@@ -102,9 +105,9 @@ export const GameCanvas = () => {
         let newX = isDropping ? prev.x : prev.x + velocity.x * 0.1;
         let newY = prev.y + velocity.y * 0.1;
         
-        // Gravity when not dropping (arc physics)
+        // Strong gravity for arc physics
         if (!isDropping) {
-          setVelocity(v => ({ ...v, y: v.y + 0.4 })); // Arc gravity
+          setVelocity(v => ({ ...v, y: v.y + 0.6 }));
         }
         
         // Check boundaries
