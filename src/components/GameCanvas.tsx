@@ -40,27 +40,27 @@ export const GameCanvas = () => {
     const newObstacles: GameObject[] = [];
     const newMossPads: MossPad[] = [];
     
-    // Create obstacles (logs) - slightly smaller
-    for (let i = 0; i < 5; i++) {
+    // Create initial obstacles across the screen
+    for (let i = 0; i < 7; i++) {
       if (i % 2 === 0) {
         newObstacles.push({
           x: 15 + (i * 18),
           y: 35,
-          width: 13, // Reduced from 15
-          height: 7,  // Reduced from 8
+          width: 13.5, // Slightly harder from 13
+          height: 7.2,  // Slightly harder from 7
         });
       }
     }
     
-    // Create moss pads - larger and more forgiving
-    for (let i = 0; i < 4; i++) {
+    // Create initial moss pads
+    for (let i = 0; i < 6; i++) {
       newMossPads.push({
         x: 20 + (i * 24),
         y: 75,
-        width: 20, // Increased from 18
-        height: 5,  // Increased from 4
+        width: 19.5, // Slightly smaller from 20
+        height: 4.8,  // Slightly smaller from 5
         angle: i * 45,
-        speed: 0.15, // Slower movement
+        speed: 0.16, // Slightly faster from 0.15
       });
     }
     
@@ -138,6 +138,38 @@ export const GameCanvas = () => {
         if (landedPad && isDropping) {
           setScore(s => s + 1);
           toast.success('BOING!', { duration: 500 });
+          
+          // Scroll everything left and spawn new ones on the right
+          setObstacles(obs => {
+            const shifted = obs.map(o => ({ ...o, x: o.x - 24 })).filter(o => o.x > -20);
+            // Add new obstacle on the right if needed
+            if (shifted.length < 5) {
+              shifted.push({
+                x: 90,
+                y: 35,
+                width: 13.5,
+                height: 7.2,
+              });
+            }
+            return shifted;
+          });
+          
+          setMossPads(pads => {
+            const shifted = pads.map(p => ({ ...p, x: p.x - 24 })).filter(p => p.x > -20);
+            // Add new moss pad on the right if needed
+            if (shifted.length < 5) {
+              shifted.push({
+                x: 90,
+                y: 75,
+                width: 19.5,
+                height: 4.8,
+                angle: Math.random() * 360,
+                speed: 0.16,
+              });
+            }
+            return shifted;
+          });
+          
           launch();
           return { x: newX, y: landedPad.y - 5 };
         }
