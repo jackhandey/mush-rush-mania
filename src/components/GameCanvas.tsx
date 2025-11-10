@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Grumblecap } from './Grumblecap';
+import { Tutorial } from './Tutorial';
 import { toast } from 'sonner';
 
 interface GameObject {
@@ -15,7 +16,8 @@ interface MossPad extends GameObject {
 }
 
 export const GameCanvas = () => {
-  const [gameState, setGameState] = useState<'menu' | 'playing' | 'crashed'>('menu');
+  const [gameState, setGameState] = useState<'tutorial' | 'menu' | 'playing' | 'crashed'>('tutorial');
+  const [showTutorial, setShowTutorial] = useState(true);
   const [score, setScore] = useState(0);
   const [mushroomPos, setMushroomPos] = useState({ x: 50, y: 80 });
   const [velocity, setVelocity] = useState({ x: 0, y: 0 });
@@ -25,6 +27,7 @@ export const GameCanvas = () => {
   const gameLoopRef = useRef<number>();
 
   const startGame = () => {
+    setShowTutorial(false);
     setGameState('playing');
     setScore(0);
     setMushroomPos({ x: 50, y: 80 });
@@ -69,6 +72,8 @@ export const GameCanvas = () => {
   };
 
   const handleTap = () => {
+    if (gameState === 'tutorial') return;
+    
     if (gameState === 'menu') {
       startGame();
       return;
@@ -173,6 +178,11 @@ export const GameCanvas = () => {
         handleTap();
       }}
     >
+      {/* Tutorial */}
+      {gameState === 'tutorial' && showTutorial && (
+        <Tutorial onComplete={() => setGameState('menu')} />
+      )}
+      
       {/* Score */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 text-6xl font-bold text-foreground z-10">
         {score}
