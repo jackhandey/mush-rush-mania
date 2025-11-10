@@ -16,8 +16,8 @@ interface MossPad extends GameObject {
 }
 
 export const GameCanvas = () => {
-  const [gameState, setGameState] = useState<'tutorial' | 'menu' | 'playing' | 'crashed'>('tutorial');
-  const [showTutorial, setShowTutorial] = useState(true);
+  const [gameState, setGameState] = useState<'tutorial' | 'menu' | 'playing' | 'crashed'>('menu');
+  const [showTutorial, setShowTutorial] = useState(false);
   const [score, setScore] = useState(0);
   const [mushroomPos, setMushroomPos] = useState({ x: 50, y: 80 });
   const [velocity, setVelocity] = useState({ x: 0, y: 0 });
@@ -208,9 +208,12 @@ export const GameCanvas = () => {
         handleTap();
       }}
     >
-      {/* Tutorial */}
-      {gameState === 'tutorial' && showTutorial && (
-        <Tutorial onComplete={() => setGameState('menu')} />
+      {/* Tutorial - only when explicitly shown */}
+      {showTutorial && (
+        <Tutorial onComplete={() => {
+          setShowTutorial(false);
+          setGameState('menu');
+        }} />
       )}
       
       {/* Score */}
@@ -219,38 +222,24 @@ export const GameCanvas = () => {
       </div>
       
       {/* Menu Screen */}
-      {gameState === 'menu' && (
+      {gameState === 'menu' && !showTutorial && (
         <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-background/80 backdrop-blur-sm">
-          <h1 className="text-7xl font-bold text-primary mb-4 tracking-wider">
+          <h1 className="text-7xl font-bold text-primary mb-8 tracking-wider">
             MUSH-RUSH
           </h1>
           
-          {/* Instructions */}
-          <div className="bg-card border-2 border-primary rounded-lg p-6 max-w-md mb-8">
-            <h2 className="text-2xl font-bold text-foreground mb-4">How to Play:</h2>
-            <div className="space-y-3 text-left">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold flex-shrink-0">1</div>
-                <p className="text-lg text-muted-foreground">Mushroom launches automatically</p>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold flex-shrink-0">2</div>
-                <p className="text-lg text-muted-foreground">TAP to drop straight down</p>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold flex-shrink-0">3</div>
-                <p className="text-lg text-muted-foreground">Land on green moss pads = +1 point!</p>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-destructive rounded-full flex items-center justify-center text-destructive-foreground font-bold flex-shrink-0">!</div>
-                <p className="text-lg text-muted-foreground">Avoid brown logs or you crash</p>
-              </div>
-            </div>
+          <div className="mb-8 animate-bounce-slow">
+            <Grumblecap isDropping={false} isCrashed={false} />
           </div>
           
-          <p className="text-3xl text-foreground mb-4 font-bold animate-pulse">TAP ANYWHERE TO START</p>
-          <div className="animate-bounce-slow">
-            <Grumblecap isDropping={false} isCrashed={false} />
+          <div className="space-y-4">
+            <p className="text-3xl text-foreground font-bold animate-pulse">TAP TO START</p>
+            <button
+              onClick={() => setShowTutorial(true)}
+              className="px-6 py-2 text-lg text-muted-foreground hover:text-foreground underline"
+            >
+              Show Tutorial
+            </button>
           </div>
         </div>
       )}

@@ -7,52 +7,15 @@ interface TutorialProps {
 
 export const Tutorial = ({ onComplete }: TutorialProps) => {
   const [step, setStep] = useState(0);
-  const [mushroomY, setMushroomY] = useState(20);
-  const [isDropping, setIsDropping] = useState(false);
 
   useEffect(() => {
     const sequence = async () => {
-      // Step 0: Show mushroom launching
       await new Promise(resolve => setTimeout(resolve, 1000));
       setStep(1);
-      
-      // Step 1: Mushroom arcs up
-      let y = 20;
-      const arcInterval = setInterval(() => {
-        y += 2;
-        setMushroomY(y);
-        if (y >= 40) {
-          clearInterval(arcInterval);
-          setStep(2);
-        }
-      }, 50);
-      
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Step 2: Show TAP indicator
+      await new Promise(resolve => setTimeout(resolve, 2000));
       setStep(2);
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Step 3: Drop!
+      await new Promise(resolve => setTimeout(resolve, 2000));
       setStep(3);
-      setIsDropping(true);
-      const dropInterval = setInterval(() => {
-        y += 3;
-        setMushroomY(y);
-        if (y >= 65) {
-          clearInterval(dropInterval);
-          setStep(4);
-        }
-      }, 50);
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Step 4: Land and score
-      setStep(4);
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Step 5: Ready to play
-      setStep(5);
     };
     
     sequence();
@@ -60,106 +23,66 @@ export const Tutorial = ({ onComplete }: TutorialProps) => {
 
   return (
     <div className="absolute inset-0 flex items-center justify-center z-30 bg-background/95 backdrop-blur-sm">
-      <div className="relative w-full max-w-md h-96">
-        {/* Tutorial Title */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 text-center">
-          <h2 className="text-3xl font-bold text-primary mb-2">Quick Tutorial</h2>
+      <div className="relative w-full max-w-md px-6">
+        {/* Title */}
+        <div className="text-center mb-8">
+          <h2 className="text-4xl font-bold text-primary mb-4">MUSH-RUSH</h2>
+          <p className="text-xl text-muted-foreground">How to Play</p>
         </div>
         
-        {/* Step Instructions */}
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 text-center px-4">
-          {step === 0 && (
-            <p className="text-xl text-foreground">Watch the Grumblecap launch...</p>
-          )}
-          {step === 1 && (
-            <p className="text-xl text-foreground animate-pulse">It flies in an arc automatically</p>
-          )}
-          {step === 2 && (
-            <div className="space-y-2">
-              <p className="text-2xl font-bold text-primary animate-pulse">TAP NOW!</p>
-              <p className="text-lg text-muted-foreground">Tap when above a moss pad</p>
+        {/* Instructions */}
+        <div className="bg-card border-2 border-primary rounded-lg p-6 mb-8 space-y-4">
+          <div className={`transition-opacity ${step >= 0 ? 'opacity-100' : 'opacity-30'}`}>
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-xl flex-shrink-0">1</div>
+              <p className="text-lg text-foreground pt-2">
+                Grumblecap <strong>launches automatically</strong> upward
+              </p>
             </div>
-          )}
-          {step === 3 && (
-            <p className="text-xl text-foreground">Dropping straight down!</p>
-          )}
-          {step === 4 && (
-            <div className="space-y-2">
-              <p className="text-3xl font-bold text-primary">BOING! +1</p>
-              <p className="text-lg text-foreground">Perfect landing!</p>
-            </div>
-          )}
-          {step === 5 && (
-            <div className="space-y-4">
-              <p className="text-2xl font-bold text-primary">You got it!</p>
-              <p className="text-lg text-muted-foreground">Time to play for real</p>
-              <button
-                onClick={onComplete}
-                className="mt-4 px-8 py-3 bg-primary text-primary-foreground rounded-lg font-bold text-xl hover:scale-105 transition-transform"
-              >
-                START GAME
-              </button>
-            </div>
-          )}
-        </div>
-        
-        {/* Visual Demo Area */}
-        <div className="absolute top-32 left-0 right-0 bottom-0">
-          {/* Moss Pad */}
-          <div 
-            className="absolute left-1/2 -translate-x-1/2 bg-game-moss border-2 border-primary rounded-full shadow-lg shadow-primary/50"
-            style={{
-              top: '60%',
-              width: '80px',
-              height: '20px',
-            }}
-          >
-            {step < 4 && (
-              <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-primary whitespace-nowrap">
-                LAND HERE
-              </div>
-            )}
           </div>
           
-          {/* Mushroom */}
-          {step < 5 && (
-            <div 
-              className="absolute left-1/2 -translate-x-1/2 transition-all duration-100"
-              style={{ 
-                top: `${mushroomY}%`,
-              }}
-            >
-              <Grumblecap isDropping={isDropping} isCrashed={false} />
+          <div className={`transition-opacity ${step >= 1 ? 'opacity-100' : 'opacity-30'}`}>
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-xl flex-shrink-0">2</div>
+              <p className="text-lg text-foreground pt-2">
+                <strong>TAP SCREEN</strong> to drop straight down
+              </p>
             </div>
-          )}
+          </div>
           
-          {/* TAP Indicator */}
-          {step === 2 && (
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-              <div className="w-24 h-24 border-4 border-primary rounded-full animate-ping opacity-75" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-4xl">
-                👆
-              </div>
+          <div className={`transition-opacity ${step >= 2 ? 'opacity-100' : 'opacity-30'}`}>
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-game-moss rounded-full flex items-center justify-center text-primary-foreground font-bold text-xl flex-shrink-0">3</div>
+              <p className="text-lg text-foreground pt-2">
+                Land on <strong className="text-primary">green moss pads</strong> = +1 point!
+              </p>
             </div>
-          )}
-          
-          {/* Success Animation */}
-          {step === 4 && (
-            <div className="absolute left-1/2 top-2/3 -translate-x-1/2 -translate-y-1/2">
-              <div className="text-6xl font-bold text-primary animate-bounce">+1</div>
+          </div>
+        </div>
+        
+        {/* Visual Demo */}
+        <div className="bg-game-bgStart rounded-lg p-8 mb-8 relative h-40 overflow-hidden">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+            <div className="w-20 h-3 bg-game-moss border-2 border-primary rounded-full" />
+          </div>
+          <div className="absolute bottom-12 left-1/2 -translate-x-1/2 animate-bounce-slow">
+            <Grumblecap isDropping={false} isCrashed={false} />
+          </div>
+          {step >= 1 && (
+            <div className="absolute top-1/3 left-1/2 -translate-x-1/2 animate-pulse">
+              <div className="text-5xl">👇</div>
+              <div className="text-sm font-bold text-primary text-center">TAP!</div>
             </div>
           )}
         </div>
         
-        {/* Skip Button */}
-        {step < 5 && (
-          <button
-            onClick={onComplete}
-            className="absolute bottom-4 right-4 px-4 py-2 text-sm text-muted-foreground hover:text-foreground underline"
-          >
-            Skip Tutorial
-          </button>
-        )}
+        {/* Start Button */}
+        <button
+          onClick={onComplete}
+          className="w-full px-8 py-4 bg-primary text-primary-foreground rounded-lg font-bold text-2xl hover:scale-105 transition-transform"
+        >
+          {step >= 3 ? 'START PLAYING' : 'SKIP →'}
+        </button>
       </div>
     </div>
   );
