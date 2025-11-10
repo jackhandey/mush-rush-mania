@@ -79,7 +79,7 @@ export const GameCanvas = () => {
     // Create fungal shelves at the bottom - bioluminescent and breathing
     for (let i = 0; i < 8; i++) {
       newMossPads.push({
-        x: i * 20,
+        x: i * 15,
         y: 75,
         width: 12.96,
         height: 3.5,
@@ -220,7 +220,7 @@ export const GameCanvas = () => {
         while (visible.length < 8) {
           const lastX = visible.length > 0 ? Math.max(...visible.map(p => p.x)) : 100;
           visible.push({
-            x: lastX + 20,
+            x: lastX + 15,
             y: 75,
             width: 12.96,
             height: 3.5,
