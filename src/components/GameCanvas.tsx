@@ -30,7 +30,7 @@ export const GameCanvas = () => {
     setShowTutorial(false);
     setGameState('playing');
     setScore(0);
-    setMushroomPos({ x: 50, y: 80 });
+    setMushroomPos({ x: 10, y: 50 }); // Start on left side, middle height
     setIsDropping(false);
     initializeObstacles();
     launch();
@@ -40,25 +40,26 @@ export const GameCanvas = () => {
     const newObstacles: GameObject[] = [];
     const newMossPads: MossPad[] = [];
     
-    // Create initial obstacles
-    for (let i = 0; i < 3; i++) {
+    // Create obstacles (logs) in the UPPER area where mushroom flies
+    for (let i = 0; i < 4; i++) {
       newObstacles.push({
-        x: 30 + (i * 25),
-        y: 20 + (i * 20),
-        width: 15,
-        height: 8,
+        x: 20 + (i * 20),
+        y: 10 + (i * 8), // Upper half of screen
+        width: 18,
+        height: 6,
       });
     }
     
-    // Create moving moss pads
-    for (let i = 0; i < 3; i++) {
+    // Create moss pads in LOWER area where mushroom should land
+    // Position them directly below the flight path gaps
+    for (let i = 0; i < 4; i++) {
       newMossPads.push({
-        x: 25 + (i * 30),
-        y: 30 + (i * 25),
-        width: 12,
-        height: 4,
-        angle: Math.random() * 360,
-        speed: 0.5 + Math.random(),
+        x: 15 + (i * 22), // Offset to be below gaps in obstacles
+        y: 50 + (i * 10), // Lower half of screen
+        width: 16,
+        height: 3,
+        angle: i * 90,
+        speed: 0.3 + (i * 0.1),
       });
     }
     
@@ -67,7 +68,8 @@ export const GameCanvas = () => {
   };
 
   const launch = () => {
-    setVelocity({ x: 3, y: -8 });
+    // Launch horizontally with slight upward arc
+    setVelocity({ x: 4, y: -3 });
     setIsDropping(false);
   };
 
@@ -100,9 +102,9 @@ export const GameCanvas = () => {
         let newX = isDropping ? prev.x : prev.x + velocity.x * 0.1;
         let newY = prev.y + velocity.y * 0.1;
         
-        // Gravity when not dropping
+        // Gravity when not dropping (arc physics)
         if (!isDropping) {
-          setVelocity(v => ({ ...v, y: v.y + 0.3 }));
+          setVelocity(v => ({ ...v, y: v.y + 0.4 })); // Arc gravity
         }
         
         // Check boundaries
