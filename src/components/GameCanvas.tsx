@@ -52,15 +52,15 @@ export const GameCanvas = () => {
       });
     }
     
-    // Create moss pads at the bottom - these are what you land on
+    // Create moss pads at the bottom - these move up/down independently
     for (let i = 0; i < 8; i++) {
       newMossPads.push({
         x: i * 20,
         y: 75,
         width: 19.5,
         height: 4.8,
-        angle: i * 45,
-        speed: 0.16,
+        angle: i * 45, // Starting phase for movement
+        speed: 0.5 + (Math.random() * 0.3), // Each moves at different speed
       });
     }
     
@@ -116,7 +116,12 @@ export const GameCanvas = () => {
       });
       
       setMossPads(pads => {
-        const scrolled = pads.map(p => ({ ...p, x: p.x - worldScrollSpeed * 0.1 }));
+        const scrolled = pads.map(p => ({ 
+          ...p, 
+          x: p.x - worldScrollSpeed * 0.1,
+          // Add vertical bobbing motion using sine wave
+          angle: (p.angle + p.speed) % 360,
+        }));
         // Remove off-screen pads and add new ones on the right
         const visible = scrolled.filter(p => p.x > -20);
         while (visible.length < 8) {
@@ -127,7 +132,7 @@ export const GameCanvas = () => {
             width: 19.5,
             height: 4.8,
             angle: Math.random() * 360,
-            speed: 0.16,
+            speed: 0.5 + (Math.random() * 0.3),
           });
         }
         return visible;
@@ -172,11 +177,7 @@ export const GameCanvas = () => {
         return { x: newX, y: newY };
       });
       
-      // Update moss pads animation (wiggling)
-      setMossPads(pads => pads.map(pad => ({
-        ...pad,
-        angle: (pad.angle + 1) % 360,
-      })));
+      // Moss pads already updated above with scrolling and movement
       
       gameLoopRef.current = requestAnimationFrame(gameLoop);
     };
@@ -273,30 +274,35 @@ export const GameCanvas = () => {
             />
           ))}
           
-          {/* Moss Pads with Labels */}
-          {mossPads.map((pad, i) => (
-            <div
-              key={`pad-${i}`}
-              className="absolute transition-all"
-              style={{
-                left: `${pad.x}%`,
-                top: `${pad.y}%`,
-              }}
-            >
-              <div 
-                className="bg-game-moss border-2 border-primary rounded-full shadow-lg shadow-primary/50"
+          {/* Moss Pads with vertical movement */}
+          {mossPads.map((pad, i) => {
+            // Calculate vertical offset using sine wave
+            const verticalOffset = Math.sin(pad.angle * Math.PI / 180) * 3; // Bobs 3% up and down
+            
+            return (
+              <div
+                key={`pad-${i}`}
+                className="absolute transition-all"
                 style={{
-                  width: `${pad.width}vw`,
-                  height: `${pad.height}vh`,
+                  left: `${pad.x}%`,
+                  top: `${pad.y + verticalOffset}%`,
                 }}
-              />
-              {score < 3 && (
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-primary whitespace-nowrap bg-background/80 px-2 py-1 rounded">
-                  LAND HERE
-                </div>
-              )}
-            </div>
-          ))}
+              >
+                <div 
+                  className="bg-game-moss border-2 border-primary rounded-full shadow-lg shadow-primary/50"
+                  style={{
+                    width: `${pad.width}vw`,
+                    height: `${pad.height}vh`,
+                  }}
+                />
+                {score < 3 && (
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-primary whitespace-nowrap bg-background/80 px-2 py-1 rounded">
+                    LAND HERE
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </>
       )}
 
