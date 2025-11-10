@@ -96,7 +96,8 @@ export const GameCanvas = () => {
 
     const gameLoop = () => {
       setMushroomPos(prev => {
-        let newX = prev.x + velocity.x * 0.1;
+        // When dropping, lock horizontal movement to go straight down
+        let newX = isDropping ? prev.x : prev.x + velocity.x * 0.1;
         let newY = prev.y + velocity.y * 0.1;
         
         // Gravity when not dropping
