@@ -55,10 +55,10 @@ export const GameCanvas = () => {
     setShowTutorial(false);
     setGameState('playing');
     setScore(0);
-    setMushroomPos({ x: 20, y: 75 }); // Start at first pad position
+    setMushroomPos({ x: 50, y: 75 }); // Center of screen
     setVelocity({ x: 0, y: 0 });
     setIsDropping(false);
-    setWorldScrollSpeed(0); // No auto-scroll, mushroom moves
+    setWorldScrollSpeed(2); // Restore scrolling
     initializeObstacles();
     launch();
   };
@@ -82,7 +82,7 @@ export const GameCanvas = () => {
       newMossPads.push({
         x: i * 15 + 5,
         y: 75,
-        width: 12.57,
+        width: 11.31,
         height: 3.5,
         angle: i * 45,
         speed: 0.5 + (Math.random() * 0.3),
@@ -188,9 +188,10 @@ export const GameCanvas = () => {
     if (gameState !== 'playing') return;
 
     const gameLoop = () => {
-      // Static obstacles - no scrolling needed
+      // Scroll the world continuously
       setObstacles(obs => {
-        const visible = obs.filter(o => o.x > -20 && o.x < 120);
+        const scrolled = obs.map(o => ({ ...o, x: o.x - worldScrollSpeed * 0.1 }));
+        const visible = scrolled.filter(o => o.x > -20);
         while (visible.length < 10) {
           const lastX = visible.length > 0 ? Math.max(...visible.map(o => o.x)) : 100;
           visible.push({
@@ -204,7 +205,7 @@ export const GameCanvas = () => {
       });
       
       setMossPads(pads => {
-        const updated = pads.map(p => {
+        const scrolled = pads.map(p => {
           const newAngle = (p.angle + p.speed) % 360;
           const newBreathPhase = (p.breathPhase + 2) % 360;
           const baseY = 75;
@@ -212,19 +213,20 @@ export const GameCanvas = () => {
           
           return {
             ...p,
+            x: p.x - worldScrollSpeed * 0.1,
             y: baseY + verticalOffset,
             angle: newAngle,
             breathPhase: newBreathPhase,
           };
         });
         
-        const visible = updated.filter(p => p.x > -20 && p.x < 120);
+        const visible = scrolled.filter(p => p.x > -20);
         while (visible.length < 12) {
           const lastX = visible.length > 0 ? Math.max(...visible.map(p => p.x)) : 100;
           visible.push({
             x: lastX + 15,
             y: 75,
-            width: 12.57,
+            width: 11.31,
             height: 3.5,
             angle: Math.random() * 360,
             speed: 0.5 + (Math.random() * 0.3),
@@ -271,8 +273,8 @@ export const GameCanvas = () => {
       })));
       
       setMushroomPos(prev => {
-        // Mushroom moves horizontally based on velocity
-        let newX = prev.x + velocity.x * 0.1;
+        // Mushroom stays centered horizontally, only moves vertically
+        let newX = prev.x;
         let newY = prev.y + velocity.y * 0.1;
         
         // Apply gravity only when not dropping (during arc)
@@ -281,8 +283,9 @@ export const GameCanvas = () => {
         }
         
         // Check boundaries
-        if (newY > 95 || newY < 0 || newX < -5 || newX > 105) {
+        if (newY > 95 || newY < 0) {
           setGameState('crashed');
+          setWorldScrollSpeed(0);
           toast.error(`Crashed! Score: ${score}`, { duration: 2000 });
           return prev;
         }
