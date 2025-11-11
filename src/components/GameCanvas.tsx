@@ -81,7 +81,7 @@ export const GameCanvas = () => {
       newMossPads.push({
         x: i * 15,
         y: 75,
-        width: 12.83,
+        width: 12.57,
         height: 3.5,
         angle: i * 45,
         speed: 0.5 + (Math.random() * 0.3),
@@ -222,7 +222,7 @@ export const GameCanvas = () => {
           visible.push({
             x: lastX + 15,
             y: 75,
-            width: 12.83,
+            width: 12.57,
             height: 3.5,
             angle: Math.random() * 360,
             speed: 0.5 + (Math.random() * 0.3),
