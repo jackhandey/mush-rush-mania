@@ -82,7 +82,7 @@ export const GameCanvas = () => {
       newMossPads.push({
         x: i * 15 + 5,
         y: 75,
-        width: 11.31,
+        width: 10.18,
         height: 3.5,
         angle: i * 45,
         speed: 0.5 + (Math.random() * 0.3),
@@ -226,7 +226,7 @@ export const GameCanvas = () => {
           visible.push({
             x: lastX + 15,
             y: 75,
-            width: 11.31,
+            width: 10.18,
             height: 3.5,
             angle: Math.random() * 360,
             speed: 0.5 + (Math.random() * 0.3),
@@ -282,8 +282,8 @@ export const GameCanvas = () => {
           setVelocity(v => ({ ...v, y: v.y + 0.55 }));
         }
         
-        // Check boundaries
-        if (newY > 95 || newY < 0) {
+        // Tighter bottom boundary - if mushroom falls below pad level, it's game over
+        if (newY > 82 || newY < 0) {
           setGameState('crashed');
           setWorldScrollSpeed(0);
           toast.error(`Crashed! Score: ${score}`, { duration: 2000 });
