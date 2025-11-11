@@ -55,9 +55,10 @@ export const GameCanvas = () => {
     setShowTutorial(false);
     setGameState('playing');
     setScore(0);
-    setMushroomPos({ x: 50, y: 75 }); // Center of screen
+    setMushroomPos({ x: 20, y: 75 }); // Start at first pad position
+    setVelocity({ x: 0, y: 0 });
     setIsDropping(false);
-    setWorldScrollSpeed(2); // Start scrolling
+    setWorldScrollSpeed(0); // No auto-scroll, mushroom moves
     initializeObstacles();
     launch();
   };
@@ -76,10 +77,10 @@ export const GameCanvas = () => {
       });
     }
     
-    // Create fungal shelves at the bottom - bioluminescent and breathing
-    for (let i = 0; i < 8; i++) {
+    // Create fungal shelves - starting from left edge
+    for (let i = 0; i < 12; i++) {
       newMossPads.push({
-        x: i * 15,
+        x: i * 15 + 5,
         y: 75,
         width: 12.57,
         height: 3.5,
@@ -154,8 +155,11 @@ export const GameCanvas = () => {
   };
 
   const launch = () => {
-    // Simple upward launch - no horizontal movement needed
-    setVelocity({ x: 0, y: -12 });
+    // Calculate overshoot arc: pad spacing is 15, overshoot to 18 units
+    const horizontalVelocity = 6; // Tuned for 15-unit spacing to overshoot
+    const verticalVelocity = -12;
+    
+    setVelocity({ x: horizontalVelocity, y: verticalVelocity });
     setIsDropping(false);
   };
 
@@ -174,7 +178,8 @@ export const GameCanvas = () => {
     
     if (gameState === 'playing' && !isDropping) {
       setIsDropping(true);
-      setVelocity({ x: 0, y: 13 }); // Slightly slower drop (was 15)
+      // INSTANT stop: zero horizontal velocity, strong downward force
+      setVelocity({ x: 0, y: 15 });
       toast('THWACK!', { duration: 500 });
     }
   };
@@ -183,11 +188,9 @@ export const GameCanvas = () => {
     if (gameState !== 'playing') return;
 
     const gameLoop = () => {
-      // Scroll the world continuously
+      // Static obstacles - no scrolling needed
       setObstacles(obs => {
-        const scrolled = obs.map(o => ({ ...o, x: o.x - worldScrollSpeed * 0.1 }));
-        // Remove off-screen obstacles and add new ones on the right
-        const visible = scrolled.filter(o => o.x > -20);
+        const visible = obs.filter(o => o.x > -20 && o.x < 120);
         while (visible.length < 10) {
           const lastX = visible.length > 0 ? Math.max(...visible.map(o => o.x)) : 100;
           visible.push({
@@ -201,23 +204,22 @@ export const GameCanvas = () => {
       });
       
       setMossPads(pads => {
-        const scrolled = pads.map(p => {
+        const updated = pads.map(p => {
           const newAngle = (p.angle + p.speed) % 360;
           const newBreathPhase = (p.breathPhase + 2) % 360;
           const baseY = 75;
           const verticalOffset = Math.sin(newAngle * Math.PI / 180) * 5;
           
           return {
-            ...p, 
-            x: p.x - worldScrollSpeed * 0.1,
+            ...p,
             y: baseY + verticalOffset,
             angle: newAngle,
             breathPhase: newBreathPhase,
           };
         });
         
-        const visible = scrolled.filter(p => p.x > -20);
-        while (visible.length < 8) {
+        const visible = updated.filter(p => p.x > -20 && p.x < 120);
+        while (visible.length < 12) {
           const lastX = visible.length > 0 ? Math.max(...visible.map(p => p.x)) : 100;
           visible.push({
             x: lastX + 15,
@@ -269,19 +271,18 @@ export const GameCanvas = () => {
       })));
       
       setMushroomPos(prev => {
-        // Mushroom stays centered, world moves
-        let newX = prev.x;
+        // Mushroom moves horizontally based on velocity
+        let newX = prev.x + velocity.x * 0.1;
         let newY = prev.y + velocity.y * 0.1;
         
-        // Slightly slower gravity for more control
+        // Apply gravity only when not dropping (during arc)
         if (!isDropping) {
-          setVelocity(v => ({ ...v, y: v.y + 0.55 })); // Reduced from 0.6
+          setVelocity(v => ({ ...v, y: v.y + 0.55 }));
         }
         
-        // Check boundaries - only top and bottom matter now
-        if (newY > 95 || newY < 0) {
+        // Check boundaries
+        if (newY > 95 || newY < 0 || newX < -5 || newX > 105) {
           setGameState('crashed');
-          setWorldScrollSpeed(0);
           toast.error(`Crashed! Score: ${score}`, { duration: 2000 });
           return prev;
         }
