@@ -40,17 +40,15 @@ export const GameCanvas = () => {
   const [showTutorial, setShowTutorial] = useState(false);
   const [score, setScore] = useState(0);
   const [mushroomPos, setMushroomPos] = useState({ x: 50, y: 80 });
+  const [velocity, setVelocity] = useState({ x: 0, y: 0 });
+  const [isDropping, setIsDropping] = useState(false);
   const [obstacles, setObstacles] = useState<GameObject[]>([]);
   const [mossPads, setMossPads] = useState<MossPad[]>([]);
   const [spores, setSpores] = useState<Particle[]>([]);
   const [fireflies, setFireflies] = useState<Firefly[]>([]);
   const [raindrops, setRaindrops] = useState<Raindrop[]>([]);
   const [gnats, setGnats] = useState<Particle[]>([]);
-  
-  // Use refs for values that update frequently but don't need to trigger re-renders
-  const velocityRef = useRef({ x: 0, y: 0 });
-  const isDroppingRef = useRef(false);
-  const worldScrollSpeedRef = useRef(0);
+  const [worldScrollSpeed, setWorldScrollSpeed] = useState(0);
   const gameLoopRef = useRef<number>();
 
   const checkCollision = useCallback((a: GameObject, b: GameObject) => {
@@ -67,9 +65,9 @@ export const GameCanvas = () => {
     setGameState('playing');
     setScore(0);
     setMushroomPos({ x: 50, y: 75 });
-    velocityRef.current = { x: 0, y: 0 };
-    isDroppingRef.current = false;
-    worldScrollSpeedRef.current = 2;
+    setVelocity({ x: 0, y: 0 });
+    setIsDropping(false);
+    setWorldScrollSpeed(2);
     initializeObstacles();
     launch();
   }, []);
@@ -169,8 +167,8 @@ export const GameCanvas = () => {
     const horizontalVelocity = 6;
     const verticalVelocity = -12;
     
-    velocityRef.current = { x: horizontalVelocity, y: verticalVelocity };
-    isDroppingRef.current = false;
+    setVelocity({ x: horizontalVelocity, y: verticalVelocity });
+    setIsDropping(false);
   }, []);
 
   const handleTap = useCallback(() => {
@@ -186,22 +184,17 @@ export const GameCanvas = () => {
       return;
     }
     
-    if (gameState === 'playing' && !isDroppingRef.current) {
-      isDroppingRef.current = true;
-      velocityRef.current = { x: 0, y: 15 };
+    if (gameState === 'playing' && !isDropping) {
+      setIsDropping(true);
+      setVelocity({ x: 0, y: 15 });
       toast('THWACK!', { duration: 500 });
     }
-  }, [gameState, startGame]);
+  }, [gameState, isDropping, startGame]);
 
   useEffect(() => {
     if (gameState !== 'playing') return;
 
     const gameLoop = () => {
-      const velocity = velocityRef.current;
-      const isDropping = isDroppingRef.current;
-      const worldScrollSpeed = worldScrollSpeedRef.current;
-      
-      // Batch all state updates together
       setObstacles(obs => {
         const scrolled = obs.map(o => ({ ...o, x: o.x - worldScrollSpeed * 0.1 }));
         const visible = scrolled.filter(o => o.x > -20);
@@ -286,16 +279,13 @@ export const GameCanvas = () => {
         let newY = prev.y + velocity.y * 0.1;
         
         if (!isDropping) {
-          velocityRef.current = { ...velocity, y: velocity.y + 0.55 };
+          setVelocity(v => ({ ...v, y: v.y + 0.55 }));
         }
         
         if (newY > 82 || newY < 0) {
           setGameState('crashed');
-          worldScrollSpeedRef.current = 0;
-          setScore(s => {
-            toast.error(`Crashed! Score: ${s}`, { duration: 2000 });
-            return s;
-          });
+          setWorldScrollSpeed(0);
+          toast.error(`Crashed! Score: ${score}`, { duration: 2000 });
           return prev;
         }
         
@@ -338,7 +328,7 @@ export const GameCanvas = () => {
         cancelAnimationFrame(gameLoopRef.current);
       }
     };
-  }, [gameState, launch, checkCollision, mossPads]);
+  }, [gameState, velocity, isDropping, worldScrollSpeed, mossPads, score, launch, checkCollision]);
 
 
   return (
@@ -433,10 +423,10 @@ export const GameCanvas = () => {
             style={{ 
               left: `${mushroomPos.x}%`, 
               top: `${mushroomPos.y}%`,
-              transform: isDroppingRef.current ? 'rotate(0deg)' : `rotate(${velocityRef.current.x * 5}deg)`,
+              transform: isDropping ? 'rotate(0deg)' : `rotate(${velocity.x * 5}deg)`,
             }}
           >
-            <Grumblecap isDropping={isDroppingRef.current} isCrashed={false} />
+            <Grumblecap isDropping={isDropping} isCrashed={false} />
           </div>
           
           {/* Fungal Shelves - Bioluminescent and breathing */}
