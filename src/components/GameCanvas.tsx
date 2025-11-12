@@ -289,12 +289,18 @@ export const GameCanvas = () => {
           return prev;
         }
         
-        // More accurate collision box - mushroom is 5% wide, use center bottom portion
-        const mushroomBox = { x: newX + 1.5, y: newY + 3, width: 2, height: 2 };
+        // Use center point of mushroom for precise landing detection
+        const mushroomCenterX = newX + 2.5; // Center of 5% wide mushroom
+        const mushroomBottomY = newY + 5;   // Bottom of mushroom
         
         let landedPad: MossPad | null = null;
         mossPads.forEach(pad => {
-          if (checkCollision(mushroomBox, pad) && velocity.y > 0) {
+          // Require mushroom center to be within pad boundaries
+          if (velocity.y > 0 && 
+              mushroomCenterX >= pad.x && 
+              mushroomCenterX <= pad.x + pad.width &&
+              mushroomBottomY >= pad.y && 
+              mushroomBottomY <= pad.y + pad.height) {
             landedPad = pad;
           }
         });
