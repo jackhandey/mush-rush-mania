@@ -289,7 +289,8 @@ export const GameCanvas = () => {
           return prev;
         }
         
-        const mushroomBox = { x: newX + 1, y: newY + 1, width: 3, height: 3 };
+        // More accurate collision box - mushroom is 5% wide, use center bottom portion
+        const mushroomBox = { x: newX + 1.5, y: newY + 3, width: 2, height: 2 };
         
         let landedPad: MossPad | null = null;
         mossPads.forEach(pad => {
