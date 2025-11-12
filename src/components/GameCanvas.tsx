@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Grumblecap } from './Grumblecap';
 import { Tutorial } from './Tutorial';
 import { toast } from 'sonner';
@@ -40,28 +40,39 @@ export const GameCanvas = () => {
   const [showTutorial, setShowTutorial] = useState(false);
   const [score, setScore] = useState(0);
   const [mushroomPos, setMushroomPos] = useState({ x: 50, y: 80 });
-  const [velocity, setVelocity] = useState({ x: 0, y: 0 });
-  const [isDropping, setIsDropping] = useState(false);
   const [obstacles, setObstacles] = useState<GameObject[]>([]);
   const [mossPads, setMossPads] = useState<MossPad[]>([]);
   const [spores, setSpores] = useState<Particle[]>([]);
   const [fireflies, setFireflies] = useState<Firefly[]>([]);
   const [raindrops, setRaindrops] = useState<Raindrop[]>([]);
   const [gnats, setGnats] = useState<Particle[]>([]);
-  const [worldScrollSpeed, setWorldScrollSpeed] = useState(0);
+  
+  // Use refs for values that update frequently but don't need to trigger re-renders
+  const velocityRef = useRef({ x: 0, y: 0 });
+  const isDroppingRef = useRef(false);
+  const worldScrollSpeedRef = useRef(0);
   const gameLoopRef = useRef<number>();
 
-  const startGame = () => {
+  const checkCollision = useCallback((a: GameObject, b: GameObject) => {
+    return (
+      a.x < b.x + b.width &&
+      a.x + a.width > b.x &&
+      a.y < b.y + b.height &&
+      a.y + a.height > b.y
+    );
+  }, []);
+
+  const startGame = useCallback(() => {
     setShowTutorial(false);
     setGameState('playing');
     setScore(0);
-    setMushroomPos({ x: 50, y: 75 }); // Center of screen
-    setVelocity({ x: 0, y: 0 });
-    setIsDropping(false);
-    setWorldScrollSpeed(2); // Restore scrolling
+    setMushroomPos({ x: 50, y: 75 });
+    velocityRef.current = { x: 0, y: 0 };
+    isDroppingRef.current = false;
+    worldScrollSpeedRef.current = 2;
     initializeObstacles();
     launch();
-  };
+  }, []);
 
   const initializeObstacles = () => {
     const newObstacles: GameObject[] = [];
@@ -154,16 +165,15 @@ export const GameCanvas = () => {
     setGnats(newGnats);
   };
 
-  const launch = () => {
-    // Calculate overshoot arc: pad spacing is 15, overshoot to 18 units
-    const horizontalVelocity = 6; // Tuned for 15-unit spacing to overshoot
+  const launch = useCallback(() => {
+    const horizontalVelocity = 6;
     const verticalVelocity = -12;
     
-    setVelocity({ x: horizontalVelocity, y: verticalVelocity });
-    setIsDropping(false);
-  };
+    velocityRef.current = { x: horizontalVelocity, y: verticalVelocity };
+    isDroppingRef.current = false;
+  }, []);
 
-  const handleTap = () => {
+  const handleTap = useCallback(() => {
     if (gameState === 'tutorial') return;
     
     if (gameState === 'menu') {
@@ -176,19 +186,22 @@ export const GameCanvas = () => {
       return;
     }
     
-    if (gameState === 'playing' && !isDropping) {
-      setIsDropping(true);
-      // INSTANT stop: zero horizontal velocity, strong downward force
-      setVelocity({ x: 0, y: 15 });
+    if (gameState === 'playing' && !isDroppingRef.current) {
+      isDroppingRef.current = true;
+      velocityRef.current = { x: 0, y: 15 };
       toast('THWACK!', { duration: 500 });
     }
-  };
+  }, [gameState, startGame]);
 
   useEffect(() => {
     if (gameState !== 'playing') return;
 
     const gameLoop = () => {
-      // Scroll the world continuously
+      const velocity = velocityRef.current;
+      const isDropping = isDroppingRef.current;
+      const worldScrollSpeed = worldScrollSpeedRef.current;
+      
+      // Batch all state updates together
       setObstacles(obs => {
         const scrolled = obs.map(o => ({ ...o, x: o.x - worldScrollSpeed * 0.1 }));
         const visible = scrolled.filter(o => o.x > -20);
@@ -237,7 +250,6 @@ export const GameCanvas = () => {
         return visible;
       });
       
-      // Update spores
       setSpores(prev => prev.map(s => ({
         ...s,
         y: s.y + s.speed,
@@ -245,7 +257,6 @@ export const GameCanvas = () => {
         ...(s.y > 110 && { y: -10, x: Math.random() * 100 })
       })));
       
-      // Update fireflies
       setFireflies(prev => prev.map(f => ({
         ...f,
         x: f.x + f.drift,
@@ -256,14 +267,12 @@ export const GameCanvas = () => {
         ...(f.y > 110 && { y: -10 })
       })));
       
-      // Update raindrops
       setRaindrops(prev => prev.map(r => ({
         ...r,
         y: r.y + r.speed,
         ...(r.y > 110 && { y: -r.size, x: Math.random() * 100 })
       })));
       
-      // Update gnats
       setGnats(prev => prev.map(g => ({
         ...g,
         x: g.x + g.drift,
@@ -273,27 +282,25 @@ export const GameCanvas = () => {
       })));
       
       setMushroomPos(prev => {
-        // Mushroom stays centered horizontally, only moves vertically
         let newX = prev.x;
         let newY = prev.y + velocity.y * 0.1;
         
-        // Apply gravity only when not dropping (during arc)
         if (!isDropping) {
-          setVelocity(v => ({ ...v, y: v.y + 0.55 }));
+          velocityRef.current = { ...velocity, y: velocity.y + 0.55 };
         }
         
-        // Tighter bottom boundary - if mushroom falls below pad level, it's game over
         if (newY > 82 || newY < 0) {
           setGameState('crashed');
-          setWorldScrollSpeed(0);
-          toast.error(`Crashed! Score: ${score}`, { duration: 2000 });
+          worldScrollSpeedRef.current = 0;
+          setScore(s => {
+            toast.error(`Crashed! Score: ${s}`, { duration: 2000 });
+            return s;
+          });
           return prev;
         }
         
-        // Check collision with mushroom hitbox
         const mushroomBox = { x: newX + 1, y: newY + 1, width: 3, height: 3 };
         
-        // Check landing on moss pad
         let landedPad: MossPad | null = null;
         mossPads.forEach(pad => {
           if (checkCollision(mushroomBox, pad) && velocity.y > 0) {
@@ -305,7 +312,6 @@ export const GameCanvas = () => {
           setScore(s => s + 1);
           toast.success('BOING!', { duration: 500 });
           
-          // Pulse the landed pad
           setMossPads(pads => pads.map(p => 
             p === landedPad ? { ...p, glowIntensity: 1 } : p
           ));
@@ -322,8 +328,6 @@ export const GameCanvas = () => {
         return { x: newX, y: newY };
       });
       
-      // Moss pads already updated above with scrolling and movement
-      
       gameLoopRef.current = requestAnimationFrame(gameLoop);
     };
 
@@ -334,16 +338,8 @@ export const GameCanvas = () => {
         cancelAnimationFrame(gameLoopRef.current);
       }
     };
-  }, [gameState, velocity, isDropping, obstacles, mossPads, spores, fireflies, raindrops, gnats, score]);
+  }, [gameState, launch, checkCollision, mossPads]);
 
-  const checkCollision = (a: GameObject, b: GameObject) => {
-    return (
-      a.x < b.x + b.width &&
-      a.x + a.width > b.x &&
-      a.y < b.y + b.height &&
-      a.y + a.height > b.y
-    );
-  };
 
   return (
     <div 
@@ -437,10 +433,10 @@ export const GameCanvas = () => {
             style={{ 
               left: `${mushroomPos.x}%`, 
               top: `${mushroomPos.y}%`,
-              transform: isDropping ? 'rotate(0deg)' : `rotate(${velocity.x * 5}deg)`,
+              transform: isDroppingRef.current ? 'rotate(0deg)' : `rotate(${velocityRef.current.x * 5}deg)`,
             }}
           >
-            <Grumblecap isDropping={isDropping} isCrashed={false} />
+            <Grumblecap isDropping={isDroppingRef.current} isCrashed={false} />
           </div>
           
           {/* Fungal Shelves - Bioluminescent and breathing */}
