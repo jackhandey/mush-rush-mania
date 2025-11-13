@@ -295,12 +295,12 @@ export const GameCanvas = () => {
         
         let landedPad: MossPad | null = null;
         mossPads.forEach(pad => {
-          // Require mushroom center to be within pad boundaries
+          // Trigger landing when mushroom center is over pad and bottom touches or passes pad surface
           if (velocity.y > 0 && 
               mushroomCenterX >= pad.x && 
               mushroomCenterX <= pad.x + pad.width &&
-              mushroomBottomY >= pad.y && 
-              mushroomBottomY <= pad.y + pad.height) {
+              mushroomBottomY >= pad.y - 0.5 && 
+              mushroomBottomY <= pad.y + pad.height + 0.5) {
             landedPad = pad;
           }
         });
