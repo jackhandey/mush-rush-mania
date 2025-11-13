@@ -63,7 +63,7 @@ class SoundEffects {
     oscillator.stop(now + 0.15);
   }
 
-  // Thwack sound for dropping
+  // Squishy sound for dropping
   playThwack() {
     if (this.isMuted) return;
     
@@ -76,17 +76,18 @@ class SoundEffects {
     oscillator.connect(gainNode);
     gainNode.connect(ctx.destination);
     
-    // Short punchy sound
-    oscillator.frequency.setValueAtTime(150, now);
-    oscillator.frequency.exponentialRampToValueAtTime(50, now + 0.08);
+    // Squishy wobble
+    oscillator.frequency.setValueAtTime(180, now);
+    oscillator.frequency.exponentialRampToValueAtTime(120, now + 0.06);
+    oscillator.frequency.exponentialRampToValueAtTime(160, now + 0.12);
     
-    oscillator.type = 'square';
+    oscillator.type = 'sine';
     
     gainNode.gain.setValueAtTime(0.25, now);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
     
     oscillator.start(now);
-    oscillator.stop(now + 0.08);
+    oscillator.stop(now + 0.15);
   }
 
   // Sad trombone for crash
