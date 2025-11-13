@@ -70,24 +70,34 @@ class SoundEffects {
     const ctx = this.getContext();
     const now = ctx.currentTime;
     
-    const oscillator = ctx.createOscillator();
+    // Create two oscillators for a richer squish
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
     const gainNode = ctx.createGain();
     
-    oscillator.connect(gainNode);
+    osc1.connect(gainNode);
+    osc2.connect(gainNode);
     gainNode.connect(ctx.destination);
     
-    // Squishy wobble
-    oscillator.frequency.setValueAtTime(180, now);
-    oscillator.frequency.exponentialRampToValueAtTime(120, now + 0.06);
-    oscillator.frequency.exponentialRampToValueAtTime(160, now + 0.12);
+    // Low squishy wobble
+    osc1.frequency.setValueAtTime(100, now);
+    osc1.frequency.exponentialRampToValueAtTime(60, now + 0.08);
+    osc1.frequency.exponentialRampToValueAtTime(85, now + 0.16);
+    osc1.type = 'sine';
     
-    oscillator.type = 'sine';
+    // Second layer for texture
+    osc2.frequency.setValueAtTime(150, now);
+    osc2.frequency.exponentialRampToValueAtTime(90, now + 0.08);
+    osc2.frequency.exponentialRampToValueAtTime(120, now + 0.16);
+    osc2.type = 'triangle';
     
-    gainNode.gain.setValueAtTime(0.25, now);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+    gainNode.gain.setValueAtTime(0.2, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
     
-    oscillator.start(now);
-    oscillator.stop(now + 0.15);
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.18);
+    osc2.stop(now + 0.18);
   }
 
   // Sad trombone for crash
