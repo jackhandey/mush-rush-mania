@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, memo } from 'react';
 import { Grumblecap } from './Grumblecap';
 import { Tutorial } from './Tutorial';
 import { toast } from 'sonner';
@@ -103,9 +103,9 @@ export const GameCanvas = () => {
       });
     }
     
-    // Initialize spores (mid-ground particles)
+    // Initialize spores (mid-ground particles) - reduced count
     const newSpores: Particle[] = [];
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 15; i++) {
       newSpores.push({
         x: Math.random() * 100,
         y: Math.random() * 100,
@@ -116,9 +116,9 @@ export const GameCanvas = () => {
       });
     }
     
-    // Initialize fireflies (foreground)
+    // Initialize fireflies (foreground) - reduced count
     const newFireflies: Firefly[] = [];
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 5; i++) {
       newFireflies.push({
         x: Math.random() * 100,
         y: Math.random() * 100,
@@ -145,9 +145,9 @@ export const GameCanvas = () => {
       });
     }
     
-    // Initialize gnats (foreground)
+    // Initialize gnats (foreground) - reduced count
     const newGnats: Particle[] = [];
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 8; i++) {
       newGnats.push({
         x: Math.random() * 100,
         y: Math.random() * 100,
@@ -442,16 +442,15 @@ export const GameCanvas = () => {
       {gameState === 'playing' && (
         <>
           {/* Mushroom */}
-          <div 
-            className="absolute transition-transform z-20"
+          <MemoizedGrumblecap 
+            isDropping={isDropping} 
+            isCrashed={false}
             style={{ 
               left: `${mushroomPos.x}%`, 
               top: `${mushroomPos.y}%`,
               transform: isDropping ? 'rotate(0deg)' : `rotate(${velocity.x * 5}deg)`,
             }}
-          >
-            <Grumblecap isDropping={isDropping} isCrashed={false} />
-          </div>
+          />
           
           {/* Fungal Shelves - Bioluminescent and breathing */}
           {mossPads.map((pad, i) => {
@@ -569,3 +568,14 @@ export const GameCanvas = () => {
     </div>
   );
 };
+
+// Memoized Grumblecap wrapper to prevent unnecessary re-renders
+const MemoizedGrumblecap = memo(({ isDropping, isCrashed, style }: { 
+  isDropping: boolean; 
+  isCrashed: boolean;
+  style?: React.CSSProperties;
+}) => (
+  <div className="absolute transition-transform z-20" style={style}>
+    <Grumblecap isDropping={isDropping} isCrashed={isCrashed} />
+  </div>
+));
