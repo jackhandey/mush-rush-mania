@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Grumblecap } from './Grumblecap';
 import { Tutorial } from './Tutorial';
 import { toast } from 'sonner';
+import { soundEffects } from '@/utils/soundEffects';
+import { Volume2, VolumeX } from 'lucide-react';
 
 interface GameObject {
   x: number;
@@ -49,6 +51,7 @@ export const GameCanvas = () => {
   const [raindrops, setRaindrops] = useState<Raindrop[]>([]);
   const [gnats, setGnats] = useState<Particle[]>([]);
   const [worldScrollSpeed, setWorldScrollSpeed] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
   const gameLoopRef = useRef<number>();
 
   const checkCollision = useCallback((a: GameObject, b: GameObject) => {
@@ -169,6 +172,7 @@ export const GameCanvas = () => {
     
     setVelocity({ x: horizontalVelocity, y: verticalVelocity });
     setIsDropping(false);
+    soundEffects.playLaunch();
   }, []);
 
   const handleTap = useCallback(() => {
@@ -187,6 +191,7 @@ export const GameCanvas = () => {
     if (gameState === 'playing' && !isDropping) {
       setIsDropping(true);
       setVelocity({ x: 0, y: 15 });
+      soundEffects.playThwack();
       toast('THWACK!', { duration: 500 });
     }
   }, [gameState, isDropping, startGame]);
@@ -285,6 +290,7 @@ export const GameCanvas = () => {
         if (newY > 82 || newY < 0) {
           setGameState('crashed');
           setWorldScrollSpeed(0);
+          soundEffects.playCrash();
           toast.error(`Crashed! Score: ${score}`, { duration: 2000 });
           return prev;
         }
@@ -307,6 +313,7 @@ export const GameCanvas = () => {
         
         if (landedPad && isDropping) {
           setScore(s => s + 1);
+          soundEffects.playBoing();
           toast.success('BOING!', { duration: 500 });
           
           setMossPads(pads => pads.map(p => 
@@ -355,10 +362,20 @@ export const GameCanvas = () => {
         }} />
       )}
       
-      {/* Score */}
+      {/* Score and Mute Button */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 text-6xl font-bold text-foreground z-10">
         {score}
       </div>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          const newMuted = soundEffects.toggleMute();
+          setIsMuted(newMuted);
+        }}
+        className="absolute top-4 right-4 p-3 bg-background/50 hover:bg-background/70 rounded-full transition-colors z-10"
+      >
+        {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+      </button>
       
       {/* Menu Screen */}
       {gameState === 'menu' && !showTutorial && (
