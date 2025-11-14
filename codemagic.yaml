@@ -7,6 +7,10 @@ workflows:
     environment:
       node: 20.10.0
       java: 21
+      # --- THIS IS NEW ---
+      groups:
+        - keystore_credentials # This loads all the secrets you just made
+        
     scripts:
       - name: Install npm dependencies
         script: | 
@@ -18,9 +22,21 @@ workflows:
         script: | 
           npx cap add android
           npx cap sync android
+          
+      # --- THIS SCRIPT IS NEW ---
+      - name: Set up keystore
+        script: | 
+          echo $CM_KEYSTORE | base64 --decode > /tmp/keystore.jks
+
+      # --- THIS SCRIPT IS MODIFIED ---
       - name: Build Android App Bundle
         script: | 
           cd android
-          ./gradlew bundleRelease
+          ./gradlew bundleRelease \
+            -Pandroid.injected.signing.store.file=/tmp/keystore.jks \
+            -Pandroid.injected.signing.store.password=$CM_KEYSTORE_PASSWORD \
+            -Pandroid.injected.signing.key.alias=$CM_KEY_ALIAS \
+            -Pandroid.injected.signing.key.password=$CM_KEY_PASSWORD
+            
     artifacts:
       - android/app/build/outputs/bundle/release/app-release.aab
