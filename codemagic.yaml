@@ -7,8 +7,12 @@ workflows:
 
     # Set the Node.js version here
     environment:
+<<<<<<< HEAD
       node: 18.18.0
 
+=======
+      node: 20.10.0 # Or your project's node version
+>>>>>>> 803bc32fc6b732d5f506cc3433e079b36281a6b9
     scripts:
       - name: Install npm dependencies
         script: |
