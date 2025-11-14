@@ -6,7 +6,7 @@ workflows:
     instance_type: mac_mini_m1
     environment:
       node: 20.10.0
-      jdk: 21
+      java: 21
     scripts:
       - name: Install npm dependencies
         script: | 
