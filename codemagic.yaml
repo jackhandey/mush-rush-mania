@@ -5,19 +5,19 @@ workflows:
     name: Ionic Android
     instance_type: mac_mini_m1
     environment:
-      node: 20.10.0 # Or your project's node version
+      node: 20.10.0
     scripts:
       - name: Install npm dependencies
-        script: |
+        script: | 
           npm install
       - name: Build Ionic app
-        script: |
+        script: | 
           npm run build
       - name: Sync to Capacitor
-        script: |
+        script: | 
           npx cap sync android
       - name: Build Android App Bundle
-        script: |
+        script: | 
           cd android
           ./gradlew bundleRelease
     artifacts:
