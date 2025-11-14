@@ -4,8 +4,11 @@ workflows:
   ionic-android:
     name: Ionic Android
     instance_type: mac_mini_m1
+
+    # Set the Node.js version here
     environment:
-      node: 18.18.0 # Or your project's node version
+      node: 18.18.0
+
     scripts:
       - name: Install npm dependencies
         script: |
