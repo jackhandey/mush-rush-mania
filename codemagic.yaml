@@ -1,0 +1,24 @@
+# A basic codemagic.yaml file for Ionic Capacitor (Android)
+
+workflows:
+  ionic-android:
+    name: Ionic Android
+    instance_type: mac_mini_m1
+    environment:
+      node: 18.18.0 # Or your project's node version
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          npm install
+      - name: Build Ionic app
+        script: |
+          npm run build
+      - name: Sync to Capacitor
+        script: |
+          npx cap sync android
+      - name: Build Android App Bundle
+        script: |
+          cd android
+          ./gradlew bundleRelease
+    artifacts:
+      - android/app/build/outputs/bundle/release/app-release.aab
