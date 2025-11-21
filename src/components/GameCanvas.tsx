@@ -53,6 +53,9 @@ export const GameCanvas = () => {
   const [worldScrollSpeed, setWorldScrollSpeed] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const gameLoopRef = useRef<number>();
+  
+  // Mobile detection
+  const isMobile = window.innerWidth <= 768;
 
   const checkCollision = useCallback((a: GameObject, b: GameObject) => {
     return (
@@ -70,7 +73,8 @@ export const GameCanvas = () => {
     setMushroomPos({ x: 50, y: 75 });
     setVelocity({ x: 0, y: 0 });
     setIsDropping(false);
-    setWorldScrollSpeed(2);
+    // Slower scroll on mobile for better timing
+    setWorldScrollSpeed(isMobile ? 1.2 : 2);
     initializeObstacles();
     launch();
   }, []);
@@ -89,13 +93,16 @@ export const GameCanvas = () => {
       });
     }
     
-    // Create fungal shelves - starting from left edge
+    // Create fungal shelves - bigger pads on mobile
+    const padWidth = isMobile ? 15 : 10.18;
+    const padHeight = isMobile ? 5 : 3.5;
+    
     for (let i = 0; i < 12; i++) {
       newMossPads.push({
         x: i * 15 + 5,
         y: 75,
-        width: 10.18,
-        height: 3.5,
+        width: padWidth,
+        height: padHeight,
         angle: i * 45,
         speed: 0.5 + (Math.random() * 0.3),
         breathPhase: Math.random() * 360,
@@ -167,8 +174,9 @@ export const GameCanvas = () => {
   };
 
   const launch = useCallback(() => {
-    const horizontalVelocity = 6;
-    const verticalVelocity = -12;
+    // Slower jump on mobile for better visibility and timing
+    const horizontalVelocity = isMobile ? 4.5 : 6;
+    const verticalVelocity = isMobile ? -9 : -12;
     
     setVelocity({ x: horizontalVelocity, y: verticalVelocity });
     setIsDropping(false);
@@ -190,7 +198,9 @@ export const GameCanvas = () => {
     
     if (gameState === 'playing' && !isDropping) {
       setIsDropping(true);
-      setVelocity({ x: 0, y: 15 });
+      // Slower drop on mobile
+      const dropSpeed = isMobile ? 11 : 15;
+      setVelocity({ x: 0, y: dropSpeed });
       soundEffects.playThwack();
       toast('THWACK!', { duration: 500 });
     }
@@ -234,11 +244,14 @@ export const GameCanvas = () => {
         const visible = scrolled.filter(p => p.x > -20);
         while (visible.length < 12) {
           const lastX = visible.length > 0 ? Math.max(...visible.map(p => p.x)) : 100;
+          const padWidth = isMobile ? 15 : 10.18;
+          const padHeight = isMobile ? 5 : 3.5;
+          
           visible.push({
             x: lastX + 15,
             y: 75,
-            width: 10.18,
-            height: 3.5,
+            width: padWidth,
+            height: padHeight,
             angle: Math.random() * 360,
             speed: 0.5 + (Math.random() * 0.3),
             breathPhase: Math.random() * 360,
@@ -284,7 +297,9 @@ export const GameCanvas = () => {
         let newY = prev.y + velocity.y * 0.1;
         
         if (!isDropping) {
-          setVelocity(v => ({ ...v, y: v.y + 0.55 }));
+          // Slower gravity on mobile
+          const gravity = isMobile ? 0.42 : 0.55;
+          setVelocity(v => ({ ...v, y: v.y + gravity }));
         }
         
         if (newY > 82 || newY < 0) {
@@ -296,8 +311,10 @@ export const GameCanvas = () => {
         }
         
         // Use center point of mushroom for precise landing detection
-        const mushroomCenterX = newX + 2.5; // Center of 5% wide mushroom
-        const mushroomBottomY = newY + 5;   // Bottom of mushroom
+        const mushroomWidth = isMobile ? 8 : 5;
+        const mushroomHeight = isMobile ? 8 : 5;
+        const mushroomCenterX = newX + mushroomWidth / 2;
+        const mushroomBottomY = newY + mushroomHeight;
         
         let landedPad: MossPad | null = null;
         mossPads.forEach(pad => {
@@ -441,7 +458,7 @@ export const GameCanvas = () => {
       {/* Game Objects */}
       {gameState === 'playing' && (
         <>
-          {/* Mushroom */}
+          {/* Mushroom - larger on mobile */}
           <MemoizedGrumblecap 
             isDropping={isDropping} 
             isCrashed={false}
@@ -449,6 +466,8 @@ export const GameCanvas = () => {
               left: `${mushroomPos.x}%`, 
               top: `${mushroomPos.y}%`,
               transform: isDropping ? 'rotate(0deg)' : `rotate(${velocity.x * 5}deg)`,
+              width: isMobile ? '8%' : '5%',
+              height: isMobile ? '8%' : '5%',
             }}
           />
           
