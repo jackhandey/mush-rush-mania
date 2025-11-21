@@ -33,6 +33,7 @@ workflows:
         script: | 
           cd android
           ./gradlew bundleRelease \
+            -Pandroid.injected.version.code=$BUILD_NUMBER \
             -Pandroid.injected.signing.store.file=/tmp/keystore.jks \
             -Pandroid.injected.signing.store.password=$CM_KEYSTORE_PASSWORD \
             -Pandroid.injected.signing.key.alias=$CM_KEY_ALIAS \
