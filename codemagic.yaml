@@ -22,6 +22,13 @@ workflows:
         script: | 
           npx cap add android
           npx cap sync android
+  
+# --- ADD THIS NEW SECTION HERE ---
+      - name: Update Version Code (Brute Force)
+        script: | 
+          # This finds "versionCode X" in the file and replaces it with your Codemagic build number + 100
+          sed -i '' "s/versionCode [0-9]*/versionCode $((BUILD_NUMBER + 100))/g" android/app/build.gradle
+          echo "Updated version code to $((BUILD_NUMBER + 100))"          
           
       # --- THIS SCRIPT IS NEW ---
       - name: Set up keystore
@@ -33,7 +40,6 @@ workflows:
         script: | 
           cd android
           ./gradlew bundleRelease \
-            -Pandroid.injected.version.code=$((BUILD_NUMBER + 100)) \
             -Pandroid.injected.signing.store.file=/tmp/keystore.jks \
             -Pandroid.injected.signing.store.password=$CM_KEYSTORE_PASSWORD \
             -Pandroid.injected.signing.key.alias=$CM_KEY_ALIAS \
