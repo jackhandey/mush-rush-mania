@@ -10,57 +10,86 @@ class SoundEffects {
     return this.audioContext;
   }
 
-  // Cute boing sound for landing
+  // Soft organic landing sound - tennis ball on carpet with subtle pop
   playBoing() {
     if (this.isMuted) return;
     
     const ctx = this.getContext();
     const now = ctx.currentTime;
     
-    const oscillator = ctx.createOscillator();
-    const gainNode = ctx.createGain();
+    // Low thud (tennis ball on carpet)
+    const thud = ctx.createOscillator();
+    const thudGain = ctx.createGain();
     
-    oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
+    thud.connect(thudGain);
+    thudGain.connect(ctx.destination);
     
-    // Boing frequency sweep
-    oscillator.frequency.setValueAtTime(800, now);
-    oscillator.frequency.exponentialRampToValueAtTime(400, now + 0.1);
-    oscillator.frequency.exponentialRampToValueAtTime(600, now + 0.15);
+    thud.frequency.setValueAtTime(80, now);
+    thud.frequency.exponentialRampToValueAtTime(40, now + 0.12);
+    thud.type = 'sine';
     
-    oscillator.type = 'sine';
+    thudGain.gain.setValueAtTime(0.4, now);
+    thudGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
     
-    gainNode.gain.setValueAtTime(0.3, now);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+    // Subtle breath/suction pop layer
+    const pop = ctx.createOscillator();
+    const popGain = ctx.createGain();
     
-    oscillator.start(now);
-    oscillator.stop(now + 0.2);
+    pop.connect(popGain);
+    popGain.connect(ctx.destination);
+    
+    pop.frequency.setValueAtTime(1200, now);
+    pop.frequency.exponentialRampToValueAtTime(400, now + 0.04);
+    pop.type = 'sine';
+    
+    popGain.gain.setValueAtTime(0.08, now);
+    popGain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+    
+    thud.start(now);
+    pop.start(now);
+    thud.stop(now + 0.15);
+    pop.stop(now + 0.05);
   }
 
-  // Whoosh sound for launch
+  // Soft organic jump sound - similar to landing but reversed feel
   playLaunch() {
     if (this.isMuted) return;
     
     const ctx = this.getContext();
     const now = ctx.currentTime;
     
-    const oscillator = ctx.createOscillator();
-    const gainNode = ctx.createGain();
+    // Low push sound
+    const push = ctx.createOscillator();
+    const pushGain = ctx.createGain();
     
-    oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
+    push.connect(pushGain);
+    pushGain.connect(ctx.destination);
     
-    // Whoosh frequency sweep
-    oscillator.frequency.setValueAtTime(200, now);
-    oscillator.frequency.exponentialRampToValueAtTime(800, now + 0.15);
+    push.frequency.setValueAtTime(60, now);
+    push.frequency.exponentialRampToValueAtTime(120, now + 0.08);
+    push.type = 'sine';
     
-    oscillator.type = 'sawtooth';
+    pushGain.gain.setValueAtTime(0.35, now);
+    pushGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
     
-    gainNode.gain.setValueAtTime(0.2, now);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+    // Subtle breath/release layer
+    const breath = ctx.createOscillator();
+    const breathGain = ctx.createGain();
     
-    oscillator.start(now);
-    oscillator.stop(now + 0.15);
+    breath.connect(breathGain);
+    breathGain.connect(ctx.destination);
+    
+    breath.frequency.setValueAtTime(800, now);
+    breath.frequency.exponentialRampToValueAtTime(1400, now + 0.06);
+    breath.type = 'sine';
+    
+    breathGain.gain.setValueAtTime(0.06, now);
+    breathGain.gain.exponentialRampToValueAtTime(0.01, now + 0.07);
+    
+    push.start(now);
+    breath.start(now);
+    push.stop(now + 0.12);
+    breath.stop(now + 0.07);
   }
 
   // Squishy sound for dropping
