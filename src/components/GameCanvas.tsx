@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useCallback, memo } from 'react';
 import { Grumblecap } from './Grumblecap';
-import { Tutorial } from './Tutorial';
 import { toast } from 'sonner';
 import { soundEffects } from '@/utils/soundEffects';
 import { Volume2, VolumeX } from 'lucide-react';
@@ -38,8 +37,7 @@ interface Raindrop extends Particle {
 }
 
 export const GameCanvas = () => {
-  const [gameState, setGameState] = useState<'tutorial' | 'menu' | 'playing' | 'crashed'>('menu');
-  const [showTutorial, setShowTutorial] = useState(false);
+  const [gameState, setGameState] = useState<'menu' | 'playing' | 'crashed'>('menu');
   const [score, setScore] = useState(0);
   const [mushroomPos, setMushroomPos] = useState({ x: 50, y: 80 });
   const [velocity, setVelocity] = useState({ x: 0, y: 0 });
@@ -67,7 +65,6 @@ export const GameCanvas = () => {
   }, []);
 
   const startGame = useCallback(() => {
-    setShowTutorial(false);
     setGameState('playing');
     setScore(0);
     setMushroomPos({ x: 50, y: 75 });
@@ -184,8 +181,6 @@ export const GameCanvas = () => {
   }, []);
 
   const handleTap = useCallback(() => {
-    if (gameState === 'tutorial') return;
-    
     if (gameState === 'menu') {
       startGame();
       return;
@@ -371,14 +366,6 @@ export const GameCanvas = () => {
         handleTap();
       }}
     >
-      {/* Tutorial - only when explicitly shown */}
-      {showTutorial && (
-        <Tutorial onComplete={() => {
-          setShowTutorial(false);
-          setGameState('menu');
-        }} />
-      )}
-      
       {/* Score and Mute Button */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 text-6xl font-bold text-foreground z-10">
         {score}
@@ -395,7 +382,7 @@ export const GameCanvas = () => {
       </button>
       
       {/* Menu Screen */}
-      {gameState === 'menu' && !showTutorial && (
+      {gameState === 'menu' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-background/80 backdrop-blur-sm">
           <h1 className="text-7xl font-bold text-primary mb-8 tracking-wider">
             MUSH-RUSH
@@ -405,15 +392,7 @@ export const GameCanvas = () => {
             <Grumblecap isDropping={false} isCrashed={false} />
           </div>
           
-          <div className="space-y-4">
-            <p className="text-3xl text-foreground font-bold animate-pulse">TAP TO START</p>
-            <button
-              onClick={() => setShowTutorial(true)}
-              className="px-6 py-2 text-lg text-muted-foreground hover:text-foreground underline"
-            >
-              Show Tutorial
-            </button>
-          </div>
+          <p className="text-3xl text-foreground font-bold animate-pulse">TAP TO START</p>
         </div>
       )}
 

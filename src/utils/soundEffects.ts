@@ -10,7 +10,7 @@ class SoundEffects {
     return this.audioContext;
   }
 
-  // Soft organic landing sound - tennis ball on carpet with subtle pop
+  // Soft organic landing sound - very muted tennis ball on carpet
   playBoing() {
     if (this.isMuted) return;
     
@@ -24,34 +24,34 @@ class SoundEffects {
     thud.connect(thudGain);
     thudGain.connect(ctx.destination);
     
-    thud.frequency.setValueAtTime(80, now);
-    thud.frequency.exponentialRampToValueAtTime(40, now + 0.12);
+    thud.frequency.setValueAtTime(65, now);
+    thud.frequency.exponentialRampToValueAtTime(35, now + 0.14);
     thud.type = 'sine';
     
-    thudGain.gain.setValueAtTime(0.4, now);
-    thudGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+    thudGain.gain.setValueAtTime(0.25, now);
+    thudGain.gain.exponentialRampToValueAtTime(0.01, now + 0.16);
     
-    // Subtle breath/suction pop layer
+    // Very subtle breath/suction pop layer
     const pop = ctx.createOscillator();
     const popGain = ctx.createGain();
     
     pop.connect(popGain);
     popGain.connect(ctx.destination);
     
-    pop.frequency.setValueAtTime(1200, now);
-    pop.frequency.exponentialRampToValueAtTime(400, now + 0.04);
+    pop.frequency.setValueAtTime(900, now);
+    pop.frequency.exponentialRampToValueAtTime(350, now + 0.035);
     pop.type = 'sine';
     
-    popGain.gain.setValueAtTime(0.08, now);
-    popGain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+    popGain.gain.setValueAtTime(0.04, now);
+    popGain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
     
     thud.start(now);
     pop.start(now);
-    thud.stop(now + 0.15);
-    pop.stop(now + 0.05);
+    thud.stop(now + 0.16);
+    pop.stop(now + 0.04);
   }
 
-  // Soft organic jump sound - similar to landing but reversed feel
+  // Soft organic jump sound - very gentle push
   playLaunch() {
     if (this.isMuted) return;
     
@@ -65,31 +65,31 @@ class SoundEffects {
     push.connect(pushGain);
     pushGain.connect(ctx.destination);
     
-    push.frequency.setValueAtTime(60, now);
-    push.frequency.exponentialRampToValueAtTime(120, now + 0.08);
+    push.frequency.setValueAtTime(55, now);
+    push.frequency.exponentialRampToValueAtTime(110, now + 0.09);
     push.type = 'sine';
     
-    pushGain.gain.setValueAtTime(0.35, now);
-    pushGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+    pushGain.gain.setValueAtTime(0.22, now);
+    pushGain.gain.exponentialRampToValueAtTime(0.01, now + 0.13);
     
-    // Subtle breath/release layer
+    // Very subtle breath/release layer
     const breath = ctx.createOscillator();
     const breathGain = ctx.createGain();
     
     breath.connect(breathGain);
     breathGain.connect(ctx.destination);
     
-    breath.frequency.setValueAtTime(800, now);
-    breath.frequency.exponentialRampToValueAtTime(1400, now + 0.06);
+    breath.frequency.setValueAtTime(700, now);
+    breath.frequency.exponentialRampToValueAtTime(1100, now + 0.05);
     breath.type = 'sine';
     
-    breathGain.gain.setValueAtTime(0.06, now);
-    breathGain.gain.exponentialRampToValueAtTime(0.01, now + 0.07);
+    breathGain.gain.setValueAtTime(0.035, now);
+    breathGain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
     
     push.start(now);
     breath.start(now);
-    push.stop(now + 0.12);
-    breath.stop(now + 0.07);
+    push.stop(now + 0.13);
+    breath.stop(now + 0.06);
   }
 
   // Squishy sound for dropping
