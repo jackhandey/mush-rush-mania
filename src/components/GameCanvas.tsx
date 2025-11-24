@@ -73,7 +73,7 @@ export const GameCanvas = () => {
     setVelocity({ x: 0, y: 0 });
     setIsDropping(false);
     // Slower scroll on mobile for better timing
-    setWorldScrollSpeed(isMobile ? 1.2 : 2);
+    setWorldScrollSpeed(isMobile ? 1.8 : 2);
     initializeObstacles();
     launch();
   }, []);
@@ -95,7 +95,7 @@ export const GameCanvas = () => {
     // Create fungal shelves - bigger pads on mobile with proper spacing
     const padWidth = isMobile ? 15 : 10.18;
     const padHeight = isMobile ? 5 : 3.5;
-    const padSpacing = isMobile ? 28 : 15; // Much larger gap on mobile
+    const padSpacing = isMobile ? 22 : 15; // Balanced gap for mobile trajectory
     
     for (let i = 0; i < 12; i++) {
       newMossPads.push({
@@ -174,9 +174,9 @@ export const GameCanvas = () => {
   };
 
   const launch = useCallback(() => {
-    // Slower jump on mobile for better visibility and timing
+    // Mobile needs higher jump and slower fall for proper trajectory
     const horizontalVelocity = isMobile ? 4.5 : 6;
-    const verticalVelocity = isMobile ? -9 : -12;
+    const verticalVelocity = isMobile ? -11 : -12;
     
     setVelocity({ x: horizontalVelocity, y: verticalVelocity });
     setIsDropping(false);
@@ -203,8 +203,8 @@ export const GameCanvas = () => {
     
     if (gameState === 'playing' && !isDropping) {
       setIsDropping(true);
-      // Slower drop on mobile
-      const dropSpeed = isMobile ? 11 : 15;
+      // Faster drop on mobile to compensate for softer gravity
+      const dropSpeed = isMobile ? 13 : 15;
       setVelocity({ x: 0, y: dropSpeed });
       soundEffects.playThwack();
       toast('THWACK!', { duration: 500 });
@@ -251,7 +251,7 @@ export const GameCanvas = () => {
           const lastX = visible.length > 0 ? Math.max(...visible.map(p => p.x)) : 100;
           const padWidth = isMobile ? 15 : 10.18;
           const padHeight = isMobile ? 5 : 3.5;
-          const padSpacing = isMobile ? 28 : 15;
+          const padSpacing = isMobile ? 22 : 15;
           
           visible.push({
             x: lastX + padSpacing,
@@ -303,8 +303,8 @@ export const GameCanvas = () => {
         let newY = prev.y + velocity.y * 0.1;
         
         if (!isDropping) {
-          // Slower gravity on mobile
-          const gravity = isMobile ? 0.42 : 0.55;
+          // Much softer gravity on mobile for longer hang time
+          const gravity = isMobile ? 0.35 : 0.55;
           setVelocity(v => ({ ...v, y: v.y + gravity }));
         }
         
