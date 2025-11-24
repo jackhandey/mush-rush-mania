@@ -92,15 +92,26 @@ export const GameCanvas = () => {
       });
     }
     
-    // Create fungal shelves - bigger pads on mobile with proper spacing
+    // Create fungal shelves with VARIABLE spacing and height (Flappy Bird style)
     const padWidth = isMobile ? 15 : 10.18;
     const padHeight = isMobile ? 5 : 3.5;
-    const padSpacing = isMobile ? 22 : 15; // Balanced gap for mobile trajectory
     
+    let currentX = 5;
     for (let i = 0; i < 12; i++) {
+      // Variable X spacing - sometimes close, sometimes far (disrupts rhythm)
+      const minSpacing = isMobile ? 18 : 12;
+      const maxSpacing = isMobile ? 32 : 22;
+      const spacing = minSpacing + Math.random() * (maxSpacing - minSpacing);
+      currentX += spacing;
+      
+      // Variable Y position - pads at different heights (forces timing adjustment)
+      const baseY = 75;
+      const yVariance = isMobile ? 8 : 10;
+      const randomY = baseY + (Math.random() - 0.5) * yVariance;
+      
       newMossPads.push({
-        x: i * padSpacing + 5,
-        y: 75,
+        x: currentX,
+        y: randomY,
         width: padWidth,
         height: padHeight,
         angle: i * 45,
@@ -174,9 +185,9 @@ export const GameCanvas = () => {
   };
 
   const launch = useCallback(() => {
-    // Mobile needs higher jump and slower fall for proper trajectory
+    // Strong upward velocity to fight heavy gravity
     const horizontalVelocity = isMobile ? 4.5 : 6;
-    const verticalVelocity = isMobile ? -11 : -12;
+    const verticalVelocity = isMobile ? -13 : -14;
     
     setVelocity({ x: horizontalVelocity, y: verticalVelocity });
     setIsDropping(false);
@@ -251,11 +262,20 @@ export const GameCanvas = () => {
           const lastX = visible.length > 0 ? Math.max(...visible.map(p => p.x)) : 100;
           const padWidth = isMobile ? 15 : 10.18;
           const padHeight = isMobile ? 5 : 3.5;
-          const padSpacing = isMobile ? 22 : 15;
+          
+          // Variable spacing - disrupts rhythm
+          const minSpacing = isMobile ? 18 : 12;
+          const maxSpacing = isMobile ? 32 : 22;
+          const spacing = minSpacing + Math.random() * (maxSpacing - minSpacing);
+          
+          // Variable height - forces timing adjustment
+          const baseY = 75;
+          const yVariance = isMobile ? 8 : 10;
+          const randomY = baseY + (Math.random() - 0.5) * yVariance;
           
           visible.push({
-            x: lastX + padSpacing,
-            y: 75,
+            x: lastX + spacing,
+            y: randomY,
             width: padWidth,
             height: padHeight,
             angle: Math.random() * 360,
@@ -303,8 +323,8 @@ export const GameCanvas = () => {
         let newY = prev.y + velocity.y * 0.1;
         
         if (!isDropping) {
-          // Much softer gravity on mobile for longer hang time
-          const gravity = isMobile ? 0.35 : 0.55;
+          // HEAVY gravity - drops like a rock (Flappy Bird style)
+          const gravity = isMobile ? 0.65 : 0.8;
           setVelocity(v => ({ ...v, y: v.y + gravity }));
         }
         
