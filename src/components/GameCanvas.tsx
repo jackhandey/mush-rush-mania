@@ -52,6 +52,7 @@ export const GameCanvas = () => {
   const [worldScrollSpeed, setWorldScrollSpeed] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const gameLoopRef = useRef<number>();
+  const lastTapTime = useRef<number>(0);
   
   // Mobile detection
   const isMobile = window.innerWidth <= 768;
@@ -91,13 +92,14 @@ export const GameCanvas = () => {
       });
     }
     
-    // Create fungal shelves - bigger pads on mobile
+    // Create fungal shelves - bigger pads on mobile with proper spacing
     const padWidth = isMobile ? 15 : 10.18;
     const padHeight = isMobile ? 5 : 3.5;
+    const padSpacing = isMobile ? 28 : 15; // Much larger gap on mobile
     
     for (let i = 0; i < 12; i++) {
       newMossPads.push({
-        x: i * 15 + 5,
+        x: i * padSpacing + 5,
         y: 75,
         width: padWidth,
         height: padHeight,
@@ -182,6 +184,13 @@ export const GameCanvas = () => {
   }, []);
 
   const handleTap = useCallback(() => {
+    // Debounce taps to prevent freeze from rapid clicking
+    const now = Date.now();
+    if (now - lastTapTime.current < 100) {
+      return;
+    }
+    lastTapTime.current = now;
+    
     if (gameState === 'menu') {
       startGame();
       return;
@@ -242,9 +251,10 @@ export const GameCanvas = () => {
           const lastX = visible.length > 0 ? Math.max(...visible.map(p => p.x)) : 100;
           const padWidth = isMobile ? 15 : 10.18;
           const padHeight = isMobile ? 5 : 3.5;
+          const padSpacing = isMobile ? 28 : 15;
           
           visible.push({
-            x: lastX + 15,
+            x: lastX + padSpacing,
             y: 75,
             width: padWidth,
             height: padHeight,
