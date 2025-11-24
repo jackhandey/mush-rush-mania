@@ -3,6 +3,7 @@ import { Grumblecap } from './Grumblecap';
 import { toast } from 'sonner';
 import { soundEffects } from '@/utils/soundEffects';
 import { Volume2, VolumeX } from 'lucide-react';
+import { Button } from './ui/button';
 
 interface GameObject {
   x: number;
@@ -560,7 +561,20 @@ export const GameCanvas = () => {
             <Grumblecap isDropping={false} isCrashed={true} />
           </div>
           <p className="text-4xl font-bold text-foreground mb-2">Score: {score}</p>
-          <p className="text-xl text-muted-foreground">Tap to Retry</p>
+          {isMobile ? (
+            <Button 
+              size="lg"
+              onClick={(e) => {
+                e.stopPropagation();
+                startGame();
+              }}
+              className="text-2xl px-8 py-6 mt-4"
+            >
+              Try Again
+            </Button>
+          ) : (
+            <p className="text-xl text-muted-foreground">Tap to Retry</p>
+          )}
         </div>
       )}
     </div>
