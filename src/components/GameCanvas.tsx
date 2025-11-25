@@ -93,14 +93,16 @@ export const GameCanvas = () => {
     }
     
     // Create fungal shelves with VARIABLE spacing and height (Flappy Bird style)
-    const padWidth = isMobile ? 15 : 10.18;
-    const padHeight = isMobile ? 5 : 3.5;
+    const padWidth = isMobile ? 18 : 10.18;
+    const padHeight = isMobile ? 6 : 3.5;
     
-    let currentX = 5;
+    // First pad starts AHEAD of mushroom (mushroom at x=50, so first pad at 55-60)
+    let currentX = isMobile ? 55 : 5;
     for (let i = 0; i < 12; i++) {
       // Variable X spacing - sometimes close, sometimes far (disrupts rhythm)
-      const minSpacing = isMobile ? 18 : 12;
-      const maxSpacing = isMobile ? 32 : 22;
+      // First few pads tighter for mobile to ensure reachability
+      const minSpacing = isMobile ? 15 : 12;
+      const maxSpacing = isMobile ? 25 : 22;
       const spacing = minSpacing + Math.random() * (maxSpacing - minSpacing);
       currentX += spacing;
       
@@ -186,8 +188,9 @@ export const GameCanvas = () => {
 
   const launch = useCallback(() => {
     // Strong upward velocity to fight heavy gravity
-    const horizontalVelocity = isMobile ? 4.5 : 6;
-    const verticalVelocity = isMobile ? -13 : -14;
+    // Portrait mode needs more vertical lift since screen is taller
+    const horizontalVelocity = isMobile ? 3 : 6;
+    const verticalVelocity = isMobile ? -16 : -14;
     
     setVelocity({ x: horizontalVelocity, y: verticalVelocity });
     setIsDropping(false);
@@ -260,12 +263,12 @@ export const GameCanvas = () => {
         const visible = scrolled.filter(p => p.x > -20);
         while (visible.length < 12) {
           const lastX = visible.length > 0 ? Math.max(...visible.map(p => p.x)) : 100;
-          const padWidth = isMobile ? 15 : 10.18;
-          const padHeight = isMobile ? 5 : 3.5;
+          const padWidth = isMobile ? 18 : 10.18;
+          const padHeight = isMobile ? 6 : 3.5;
           
           // Variable spacing - disrupts rhythm
-          const minSpacing = isMobile ? 18 : 12;
-          const maxSpacing = isMobile ? 32 : 22;
+          const minSpacing = isMobile ? 15 : 12;
+          const maxSpacing = isMobile ? 25 : 22;
           const spacing = minSpacing + Math.random() * (maxSpacing - minSpacing);
           
           // Variable height - forces timing adjustment
@@ -323,8 +326,8 @@ export const GameCanvas = () => {
         let newY = prev.y + velocity.y * 0.1;
         
         if (!isDropping) {
-          // HEAVY gravity - drops like a rock (Flappy Bird style)
-          const gravity = isMobile ? 0.65 : 0.8;
+          // Heavy gravity - drops like a rock (slightly softer on mobile portrait)
+          const gravity = isMobile ? 0.55 : 0.8;
           setVelocity(v => ({ ...v, y: v.y + gravity }));
         }
         
