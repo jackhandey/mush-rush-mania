@@ -303,7 +303,7 @@ export const GameCanvas = () => {
       // Update mushroom physics
       const velocity = velocityRef.current;
       const isDropping = isDroppingRef.current;
-      let newX = mushroomPosRef.current.x + velocity.x * 0.1;
+      // Mushroom stays at fixed X, world scrolls instead
       let newY = mushroomPosRef.current.y + velocity.y * 0.1;
       
       if (!isDropping) {
@@ -351,10 +351,10 @@ export const GameCanvas = () => {
           );
         }, 200);
         
-        mushroomPosRef.current = { x: newX, y: landedPad.y - 5 };
+        mushroomPosRef.current = { x: mushroomPosRef.current.x, y: landedPad.y - 5 };
         launch();
       } else {
-        mushroomPosRef.current = { x: newX, y: newY };
+        mushroomPosRef.current = { x: mushroomPosRef.current.x, y: newY };
       }
       
       // Trigger render
