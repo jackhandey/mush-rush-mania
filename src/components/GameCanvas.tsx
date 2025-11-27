@@ -95,24 +95,25 @@ export const GameCanvas = () => {
       });
     }
     
-    // Create fungal shelves - FEWER pads with WIDER spacing
+    // Create fungal shelves - progressive spacing (easier start, harder later)
     const padWidth = isMobile ? 16 : 9;
     const padHeight = isMobile ? 5 : 3;
     
     // First pad starts AHEAD of mushroom (mushroom at x=50)
     let currentX = isMobile ? 54 : 56;
     for (let i = 0; i < 6; i++) {
-      // Add spacing only AFTER the first pad
+      // Progressive spacing - first few pads are closer, then spread out
       if (i > 0) {
-        const minSpacing = isMobile ? 25 : 22;
-        const maxSpacing = isMobile ? 38 : 35;
+        const progressFactor = Math.min(i / 4, 1); // Ramps up over first 4 pads
+        const minSpacing = isMobile ? (18 + progressFactor * 10) : (16 + progressFactor * 8);
+        const maxSpacing = isMobile ? (22 + progressFactor * 18) : (20 + progressFactor * 17);
         const spacing = minSpacing + Math.random() * (maxSpacing - minSpacing);
         currentX += spacing;
       }
       
-      // Variable Y position
+      // Variable Y position - less variance early, more later
       const baseY = 75;
-      const yVariance = isMobile ? 10 : 12;
+      const yVariance = (isMobile ? 6 : 8) + (i * 1.5);
       const randomY = baseY + (Math.random() - 0.5) * yVariance;
       
       newMossPads.push({
@@ -244,11 +245,13 @@ export const GameCanvas = () => {
         const lastX = mossPadsRef.current.length > 0 ? Math.max(...mossPadsRef.current.map(p => p.x)) : 100;
         const padWidth = isMobile ? 16 : 9;
         const padHeight = isMobile ? 5 : 3;
-        const minSpacing = isMobile ? 25 : 22;
-        const maxSpacing = isMobile ? 38 : 35;
+        // Progressive difficulty based on score
+        const difficultyFactor = Math.min(score / 8, 1); // Maxes out at score 8
+        const minSpacing = isMobile ? (18 + difficultyFactor * 12) : (16 + difficultyFactor * 10);
+        const maxSpacing = isMobile ? (22 + difficultyFactor * 20) : (20 + difficultyFactor * 18);
         const spacing = minSpacing + Math.random() * (maxSpacing - minSpacing);
         const baseY = 75;
-        const yVariance = isMobile ? 10 : 12;
+        const yVariance = (isMobile ? 6 : 8) + (difficultyFactor * 6);
         const randomY = baseY + (Math.random() - 0.5) * yVariance;
         
         mossPadsRef.current.push({
