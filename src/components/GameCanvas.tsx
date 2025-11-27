@@ -76,7 +76,7 @@ export const GameCanvas = () => {
     mushroomPosRef.current = { x: 50, y: 75 };
     velocityRef.current = { x: 0, y: 0 };
     isDroppingRef.current = false;
-    worldScrollSpeedRef.current = isMobile ? 1.8 : 2;
+    worldScrollSpeedRef.current = isMobile ? 2.2 : 2.5;
     initializeObstacles();
     launch();
   }, []);
@@ -85,35 +85,34 @@ export const GameCanvas = () => {
     const newObstacles: GameObject[] = [];
     const newMossPads: MossPad[] = [];
     
-    // Create background scenery (roots/leaves) - reduced count
-    for (let i = 0; i < 6; i++) {
+    // Create background scenery (roots/leaves) - minimal for performance
+    for (let i = 0; i < 4; i++) {
       newObstacles.push({
-        x: i * 15,
+        x: i * 25,
         y: 10 + Math.random() * 50,
         width: 12,
         height: 6,
       });
     }
     
-    // Create fungal shelves with VARIABLE spacing and height (Flappy Bird style)
-    const padWidth = isMobile ? 18 : 10.18;
-    const padHeight = isMobile ? 6 : 3.5;
+    // Create fungal shelves - FEWER pads with WIDER spacing
+    const padWidth = isMobile ? 16 : 9;
+    const padHeight = isMobile ? 5 : 3;
     
     // First pad starts AHEAD of mushroom (mushroom at x=50)
-    // Mobile needs first pad closer due to smaller screen and slower physics
-    let currentX = isMobile ? 53 : 55;
-    for (let i = 0; i < 12; i++) {
-      // Add spacing only AFTER the first pad (so first pad stays close)
+    let currentX = isMobile ? 54 : 56;
+    for (let i = 0; i < 6; i++) {
+      // Add spacing only AFTER the first pad
       if (i > 0) {
-        const minSpacing = isMobile ? 15 : 12;
-        const maxSpacing = isMobile ? 25 : 22;
+        const minSpacing = isMobile ? 25 : 22;
+        const maxSpacing = isMobile ? 38 : 35;
         const spacing = minSpacing + Math.random() * (maxSpacing - minSpacing);
         currentX += spacing;
       }
       
-      // Variable Y position - pads at different heights (forces timing adjustment)
+      // Variable Y position
       const baseY = 75;
-      const yVariance = isMobile ? 8 : 10;
+      const yVariance = isMobile ? 10 : 12;
       const randomY = baseY + (Math.random() - 0.5) * yVariance;
       
       newMossPads.push({
@@ -121,65 +120,54 @@ export const GameCanvas = () => {
         y: randomY,
         width: padWidth,
         height: padHeight,
-        angle: i * 45,
-        speed: 0.5 + (Math.random() * 0.3),
+        angle: i * 60,
+        speed: 0.4,
         breathPhase: Math.random() * 360,
-        glowIntensity: 0.5 + Math.random() * 0.5,
+        glowIntensity: 0.6,
       });
     }
     
-    // Initialize spores (mid-ground particles) - minimal count for performance
+    // Initialize spores - reduced for performance
     const newSpores: Particle[] = [];
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 5; i++) {
       newSpores.push({
         x: Math.random() * 100,
         y: Math.random() * 100,
-        size: 1 + Math.random() * 2,
-        opacity: 0.3 + Math.random() * 0.4,
-        speed: 0.05 + Math.random() * 0.1,
-        drift: Math.random() * 0.5 - 0.25,
+        size: 1.5,
+        opacity: 0.4,
+        speed: 0.08,
+        drift: Math.random() * 0.4 - 0.2,
       });
     }
     
-    // Initialize fireflies (foreground) - minimal count
+    // Initialize fireflies - reduced
     const newFireflies: Firefly[] = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       newFireflies.push({
         x: Math.random() * 100,
         y: Math.random() * 100,
-        size: 2 + Math.random() * 3,
+        size: 3,
         opacity: 0.6,
-        speed: 0.1 + Math.random() * 0.15,
-        drift: Math.random() * 0.3 - 0.15,
+        speed: 0.12,
+        drift: Math.random() * 0.2 - 0.1,
         blinkPhase: Math.random() * 360,
-        blinkSpeed: 2 + Math.random() * 3,
+        blinkSpeed: 2.5,
       });
     }
     
-    // Initialize raindrops (foreground) - minimal
+    // Raindrops removed for performance
     const newRaindrops: Raindrop[] = [];
-    for (let i = 0; i < 2; i++) {
-      newRaindrops.push({
-        x: Math.random() * 100,
-        y: -10 - Math.random() * 20,
-        size: 40 + Math.random() * 60,
-        opacity: 0.15,
-        speed: 0.3 + Math.random() * 0.2,
-        drift: 0,
-        blur: 15 + Math.random() * 10,
-      });
-    }
     
-    // Initialize gnats (foreground) - minimal count
+    // Gnats reduced
     const newGnats: Particle[] = [];
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 2; i++) {
       newGnats.push({
         x: Math.random() * 100,
         y: Math.random() * 100,
-        size: 0.5 + Math.random() * 1,
-        opacity: 0.4 + Math.random() * 0.3,
-        speed: 0.3 + Math.random() * 0.4,
-        drift: Math.random() * 1 - 0.5,
+        size: 0.8,
+        opacity: 0.5,
+        speed: 0.35,
+        drift: Math.random() * 0.8 - 0.4,
       });
     }
     
@@ -192,10 +180,9 @@ export const GameCanvas = () => {
   };
 
   const launch = useCallback(() => {
-    // Strong upward velocity to fight heavy gravity
-    // Portrait mode needs more vertical lift since screen is taller
-    const horizontalVelocity = isMobile ? 3 : 6;
-    const verticalVelocity = isMobile ? -16 : -14;
+    // Longer arc - stronger upward velocity with lower gravity
+    const horizontalVelocity = isMobile ? 4 : 7;
+    const verticalVelocity = isMobile ? -20 : -18;
     
     velocityRef.current = { x: horizontalVelocity, y: verticalVelocity };
     isDroppingRef.current = false;
@@ -253,15 +240,15 @@ export const GameCanvas = () => {
         };
       }).filter(p => p.x > -20);
       
-      while (mossPadsRef.current.length < 12) {
+      while (mossPadsRef.current.length < 6) {
         const lastX = mossPadsRef.current.length > 0 ? Math.max(...mossPadsRef.current.map(p => p.x)) : 100;
-        const padWidth = isMobile ? 18 : 10.18;
-        const padHeight = isMobile ? 6 : 3.5;
-        const minSpacing = isMobile ? 15 : 12;
-        const maxSpacing = isMobile ? 25 : 22;
+        const padWidth = isMobile ? 16 : 9;
+        const padHeight = isMobile ? 5 : 3;
+        const minSpacing = isMobile ? 25 : 22;
+        const maxSpacing = isMobile ? 38 : 35;
         const spacing = minSpacing + Math.random() * (maxSpacing - minSpacing);
         const baseY = 75;
-        const yVariance = isMobile ? 8 : 10;
+        const yVariance = isMobile ? 10 : 12;
         const randomY = baseY + (Math.random() - 0.5) * yVariance;
         
         mossPadsRef.current.push({
@@ -270,9 +257,9 @@ export const GameCanvas = () => {
           width: padWidth,
           height: padHeight,
           angle: Math.random() * 360,
-          speed: 0.5 + (Math.random() * 0.3),
+          speed: 0.4,
           breathPhase: Math.random() * 360,
-          glowIntensity: 0.5 + Math.random() * 0.5,
+          glowIntensity: 0.6,
         });
       }
       
@@ -309,7 +296,7 @@ export const GameCanvas = () => {
       let newY = mushroomPosRef.current.y + velocity.y * 0.1;
       
       if (!isDropping) {
-        const gravity = isMobile ? 0.55 : 0.8;
+        const gravity = isMobile ? 0.45 : 0.65;
         velocityRef.current = { ...velocity, y: velocity.y + gravity };
       }
       
