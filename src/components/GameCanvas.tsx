@@ -99,15 +99,17 @@ export const GameCanvas = () => {
     const padWidth = isMobile ? 18 : 10.18;
     const padHeight = isMobile ? 6 : 3.5;
     
-    // First pad starts AHEAD of mushroom (mushroom at x=50, so first pad at 55-60)
-    let currentX = 55;
+    // First pad starts AHEAD of mushroom (mushroom at x=50)
+    // Mobile needs first pad closer due to smaller screen and slower physics
+    let currentX = isMobile ? 53 : 55;
     for (let i = 0; i < 12; i++) {
-      // Variable X spacing - sometimes close, sometimes far (disrupts rhythm)
-      // First few pads tighter for mobile to ensure reachability
-      const minSpacing = isMobile ? 15 : 12;
-      const maxSpacing = isMobile ? 25 : 22;
-      const spacing = minSpacing + Math.random() * (maxSpacing - minSpacing);
-      currentX += spacing;
+      // Add spacing only AFTER the first pad (so first pad stays close)
+      if (i > 0) {
+        const minSpacing = isMobile ? 15 : 12;
+        const maxSpacing = isMobile ? 25 : 22;
+        const spacing = minSpacing + Math.random() * (maxSpacing - minSpacing);
+        currentX += spacing;
+      }
       
       // Variable Y position - pads at different heights (forces timing adjustment)
       const baseY = 75;
