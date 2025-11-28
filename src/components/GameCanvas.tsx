@@ -182,9 +182,9 @@ export const GameCanvas = () => {
   };
 
   const launch = useCallback(() => {
-    // Longer arc - stronger upward velocity with lower gravity
-    const horizontalVelocity = isMobile ? 4 : 7;
-    const verticalVelocity = isMobile ? -22.4 : -20.2;
+    // Wider, lower arc - increased horizontal, reduced vertical
+    const horizontalVelocity = isMobile ? 4.5 : 7.8;
+    const verticalVelocity = isMobile ? -19.7 : -17.8;
     
     velocityRef.current = { x: horizontalVelocity, y: verticalVelocity };
     isDroppingRef.current = false;
