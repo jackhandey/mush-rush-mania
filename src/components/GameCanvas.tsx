@@ -183,7 +183,7 @@ export const GameCanvas = () => {
 
   const launch = useCallback(() => {
     // Wider, lower arc - increased horizontal, reduced vertical
-    const horizontalVelocity = isMobile ? 4.5 : 7.8;
+    const horizontalVelocity = isMobile ? 5.0 : 8.7;
     const verticalVelocity = isMobile ? -19.7 : -17.8;
     
     velocityRef.current = { x: horizontalVelocity, y: verticalVelocity };
