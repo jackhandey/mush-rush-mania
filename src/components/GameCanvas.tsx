@@ -52,6 +52,7 @@ export const GameCanvas = () => {
   const firefliesRef = useRef<Firefly[]>([]);
   const raindropsRef = useRef<Raindrop[]>([]);
   const gnatsRef = useRef<Particle[]>([]);
+  const sporeBurstRef = useRef<{ x: number; y: number; particles: { angle: number; distance: number; opacity: number }[] }>({ x: 0, y: 0, particles: [] });
   const worldScrollSpeedRef = useRef(0);
   
   const [isMuted, setIsMuted] = useState(false);
@@ -292,6 +293,16 @@ export const GameCanvas = () => {
         y: g.y + g.speed * Math.sin(Date.now() * 0.01) * 0.2,
       }));
       
+      // Update spore burst
+      if (sporeBurstRef.current.particles.length > 0) {
+        sporeBurstRef.current = {
+          ...sporeBurstRef.current,
+          particles: sporeBurstRef.current.particles
+            .map(p => ({ ...p, distance: p.distance + 2, opacity: p.opacity - 0.03 }))
+            .filter(p => p.opacity > 0),
+        };
+      }
+      
       // Update mushroom physics
       const velocity = velocityRef.current;
       const isDropping = isDroppingRef.current;
@@ -330,9 +341,23 @@ export const GameCanvas = () => {
       }
       
       if (landedPad && isDropping) {
-        setScore(s => s + 1);
+        const newScore = score + 1;
+        setScore(newScore);
         soundEffects.playBoing();
         toast.success('BOING!', { duration: 500 });
+        
+        // Spore burst every 25th jump
+        if (newScore % 25 === 0) {
+          const burstParticles = [];
+          for (let i = 0; i < 12; i++) {
+            burstParticles.push({
+              angle: (i * 30) + Math.random() * 15,
+              distance: 0,
+              opacity: 1,
+            });
+          }
+          sporeBurstRef.current = { x: mushroomPosRef.current.x, y: mushroomPosRef.current.y, particles: burstParticles };
+        }
         
         mossPadsRef.current = mossPadsRef.current.map(p => 
           p === landedPad ? { ...p, glowIntensity: 1 } : p
@@ -554,6 +579,27 @@ export const GameCanvas = () => {
           }}
         />
       ))}
+
+      {/* Spore Burst Effect */}
+      {gameState === 'playing' && sporeBurstRef.current.particles.map((p, i) => {
+        const x = sporeBurstRef.current.x + Math.cos(p.angle * Math.PI / 180) * p.distance;
+        const y = sporeBurstRef.current.y + Math.sin(p.angle * Math.PI / 180) * p.distance;
+        return (
+          <div
+            key={`burst-${i}`}
+            className="absolute rounded-full z-40"
+            style={{
+              left: `${x}%`,
+              top: `${y}%`,
+              width: '6px',
+              height: '6px',
+              background: 'hsl(var(--game-sporeGlow))',
+              boxShadow: '0 0 8px hsl(var(--game-sporeGlow))',
+              opacity: p.opacity,
+            }}
+          />
+        );
+      })}
 
       {/* Crash Screen */}
       {gameState === 'crashed' && (
