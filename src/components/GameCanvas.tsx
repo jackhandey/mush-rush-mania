@@ -183,7 +183,7 @@ export const GameCanvas = () => {
 
   const launch = useCallback(() => {
     // Consistent arc throughout game - difficulty comes from pad spacing
-    const horizontalVelocity = isMobile ? 20.75 : 24.14;
+    const horizontalVelocity = isMobile ? 25.94 : 24.14;
     const verticalVelocity = isMobile ? -19.7 : -17.8;
     
     velocityRef.current = { x: horizontalVelocity, y: verticalVelocity };
