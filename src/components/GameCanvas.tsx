@@ -129,48 +129,36 @@ export const GameCanvas = () => {
       });
     }
     
-    // Initialize spores - reduced for performance
+    // Initialize particles - minimal on mobile for Android performance
     const newSpores: Particle[] = [];
-    for (let i = 0; i < 5; i++) {
-      newSpores.push({
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: 1.5,
-        opacity: 0.4,
-        speed: 0.08,
-        drift: Math.random() * 0.4 - 0.2,
-      });
-    }
-    
-    // Initialize fireflies - reduced
     const newFireflies: Firefly[] = [];
-    for (let i = 0; i < 2; i++) {
-      newFireflies.push({
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: 3,
-        opacity: 0.6,
-        speed: 0.12,
-        drift: Math.random() * 0.2 - 0.1,
-        blinkPhase: Math.random() * 360,
-        blinkSpeed: 2.5,
-      });
-    }
-    
-    // Raindrops removed for performance
     const newRaindrops: Raindrop[] = [];
-    
-    // Gnats reduced
     const newGnats: Particle[] = [];
-    for (let i = 0; i < 2; i++) {
-      newGnats.push({
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: 0.8,
-        opacity: 0.5,
-        speed: 0.35,
-        drift: Math.random() * 0.8 - 0.4,
-      });
+    
+    if (!isMobile) {
+      // Desktop only particles
+      for (let i = 0; i < 3; i++) {
+        newSpores.push({
+          x: Math.random() * 100,
+          y: Math.random() * 100,
+          size: 1.5,
+          opacity: 0.4,
+          speed: 0.08,
+          drift: Math.random() * 0.4 - 0.2,
+        });
+      }
+      for (let i = 0; i < 2; i++) {
+        newFireflies.push({
+          x: Math.random() * 100,
+          y: Math.random() * 100,
+          size: 3,
+          opacity: 0.6,
+          speed: 0.12,
+          drift: Math.random() * 0.2 - 0.1,
+          blinkPhase: Math.random() * 360,
+          blinkSpeed: 2.5,
+        });
+      }
     }
     
     obstaclesRef.current = newObstacles;
@@ -183,7 +171,7 @@ export const GameCanvas = () => {
 
   const launch = useCallback(() => {
     // Consistent arc throughout game - difficulty comes from pad spacing
-    const horizontalVelocity = isMobile ? 25.94 : 24.14;
+    const horizontalVelocity = isMobile ? 38.91 : 24.14;
     const verticalVelocity = isMobile ? -19.7 : -17.8;
     
     velocityRef.current = { x: horizontalVelocity, y: verticalVelocity };
@@ -428,13 +416,14 @@ export const GameCanvas = () => {
         </div>
       )}
 
-      {/* Background Layer - Far (Cathedral of roots) */}
-      <div className="absolute inset-0 overflow-hidden opacity-40 blur-md">
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-game-bgStart via-accent/20 to-game-bgEnd" />
-        {/* God rays */}
-        <div className="absolute top-0 left-20 w-1 h-full bg-gradient-to-b from-foreground/10 to-transparent rotate-12 blur-sm" />
-        <div className="absolute top-0 right-32 w-1 h-full bg-gradient-to-b from-foreground/8 to-transparent -rotate-6 blur-sm" />
-      </div>
+      {/* Background Layer - Far (simplified on mobile) */}
+      {!isMobile && (
+        <div className="absolute inset-0 overflow-hidden opacity-40 blur-md">
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-game-bgStart via-accent/20 to-game-bgEnd" />
+          <div className="absolute top-0 left-20 w-1 h-full bg-gradient-to-b from-foreground/10 to-transparent rotate-12 blur-sm" />
+          <div className="absolute top-0 right-32 w-1 h-full bg-gradient-to-b from-foreground/8 to-transparent -rotate-6 blur-sm" />
+        </div>
+      )}
 
       {/* Background Scenery (blurry roots/leaves) */}
       {gameState === 'playing' && obstaclesRef.current.map((obs, i) => (
@@ -495,28 +484,31 @@ export const GameCanvas = () => {
                 }}
               >
                 <div 
-                  className="relative rounded-full"
+                  className="relative rounded-full will-change-transform"
                   style={{
                     width: `${pad.width}vw`,
                     height: `${pad.height}vh`,
-                    transform: `scale(${breathScale}, ${1 / breathScale})`,
-                    transition: 'transform 0.3s ease-in-out',
+                    transform: isMobile ? 'none' : `scale(${breathScale}, ${1 / breathScale})`,
                   }}
                 >
-                  {/* Glow layer */}
-                  <div 
-                    className="absolute inset-0 rounded-full blur-md"
-                    style={{
-                      background: `radial-gradient(circle, hsl(var(--fungal-glow)) ${glowPulse * pad.glowIntensity * 100}%, transparent)`,
-                      boxShadow: `0 0 ${20 * pad.glowIntensity * glowPulse}px hsl(var(--fungal-glow))`,
-                    }}
-                  />
+                  {/* Glow layer - simplified on mobile */}
+                  {!isMobile && (
+                    <div 
+                      className="absolute inset-0 rounded-full blur-md"
+                      style={{
+                        background: `radial-gradient(circle, hsl(var(--fungal-glow)) ${glowPulse * pad.glowIntensity * 100}%, transparent)`,
+                        boxShadow: `0 0 ${20 * pad.glowIntensity * glowPulse}px hsl(var(--fungal-glow))`,
+                      }}
+                    />
+                  )}
                   {/* Shelf surface */}
                   <div 
                     className="absolute inset-0 rounded-full border-2"
                     style={{
-                      background: `radial-gradient(ellipse at 50% 30%, hsl(var(--fungal-shelf)), hsl(var(--accent)))`,
-                      borderColor: `hsl(var(--fungal-glow) / ${0.3 + glowPulse * 0.4})`,
+                      background: isMobile 
+                        ? `hsl(var(--fungal-shelf))` 
+                        : `radial-gradient(ellipse at 50% 30%, hsl(var(--fungal-shelf)), hsl(var(--accent)))`,
+                      borderColor: `hsl(var(--fungal-glow) / 0.5)`,
                     }}
                   />
                 </div>
