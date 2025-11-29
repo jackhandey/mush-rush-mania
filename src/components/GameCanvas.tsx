@@ -182,17 +182,14 @@ export const GameCanvas = () => {
   };
 
   const launch = useCallback(() => {
-    // Wider, lower arc - increased horizontal, reduced vertical
-    // Each jump increases distance by 50%
-    const baseHorizontal = isMobile ? 16.6 : 19.31;
-    const jumpMultiplier = Math.pow(1.5, score);
-    const horizontalVelocity = baseHorizontal * jumpMultiplier;
+    // Consistent arc throughout game - difficulty comes from pad spacing
+    const horizontalVelocity = isMobile ? 16.6 : 19.31;
     const verticalVelocity = isMobile ? -19.7 : -17.8;
     
     velocityRef.current = { x: horizontalVelocity, y: verticalVelocity };
     isDroppingRef.current = false;
     soundEffects.playLaunch();
-  }, [score]);
+  }, []);
 
   const handleTap = useCallback(() => {
     const now = Date.now();
