@@ -13,6 +13,7 @@ interface GameObject {
 }
 
 interface MossPad extends GameObject {
+  id: number;
   angle: number;
   speed: number;
   breathPhase: number;
@@ -56,7 +57,8 @@ export const GameCanvas = () => {
   const gnatsRef = useRef<Particle[]>([]);
   const sporeBurstRef = useRef<{ x: number; y: number; particles: { angle: number; distance: number; opacity: number }[] }>({ x: 0, y: 0, particles: [] });
   const worldScrollSpeedRef = useRef(0);
-  const lastLandedPadRef = useRef<MossPad | null>(null);
+  const lastLandedPadIdRef = useRef<number | null>(null);
+  const nextPadIdRef = useRef(0);
   
   const [isMuted, setIsMuted] = useState(false);
   const gameLoopRef = useRef<number>();
@@ -121,6 +123,7 @@ export const GameCanvas = () => {
       const randomY = baseY + (Math.random() - 0.5) * yVariance;
       
       newMossPads.push({
+        id: nextPadIdRef.current++,
         x: currentX,
         y: randomY,
         width: padWidth,
@@ -176,7 +179,7 @@ export const GameCanvas = () => {
 
   const launch = useCallback(() => {
     // Consistent arc throughout game - difficulty comes from pad spacing
-    const horizontalVelocity = isMobile ? 65 : 24.14;
+    const horizontalVelocity = isMobile ? 85 : 24.14;
     const verticalVelocity = isMobile ? -19.7 : -17.8;
     
     velocityRef.current = { x: horizontalVelocity, y: verticalVelocity };
@@ -249,6 +252,7 @@ export const GameCanvas = () => {
         const randomY = baseY + (Math.random() - 0.5) * yVariance;
         
         mossPadsRef.current.push({
+          id: nextPadIdRef.current++,
           x: lastX + spacing,
           y: randomY,
           width: padWidth,
@@ -354,12 +358,12 @@ export const GameCanvas = () => {
         toast.success('BOING!', { duration: 500 });
         
         // Deflate the previous pad if it's still visible
-        if (lastLandedPadRef.current && lastLandedPadRef.current !== landedPad) {
+        if (lastLandedPadIdRef.current !== null && lastLandedPadIdRef.current !== landedPad.id) {
           mossPadsRef.current = mossPadsRef.current.map(p => 
-            p === lastLandedPadRef.current ? { ...p, isDeflating: true } : p
+            p.id === lastLandedPadIdRef.current ? { ...p, isDeflating: true } : p
           );
         }
-        lastLandedPadRef.current = landedPad;
+        lastLandedPadIdRef.current = landedPad.id;
         
         // Spore burst every 25th jump
         if (newScore % 25 === 0) {
