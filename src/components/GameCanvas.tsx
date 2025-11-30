@@ -17,6 +17,8 @@ interface MossPad extends GameObject {
   speed: number;
   breathPhase: number;
   glowIntensity: number;
+  isDeflating: boolean;
+  deflateProgress: number;
 }
 
 interface Particle {
@@ -54,6 +56,7 @@ export const GameCanvas = () => {
   const gnatsRef = useRef<Particle[]>([]);
   const sporeBurstRef = useRef<{ x: number; y: number; particles: { angle: number; distance: number; opacity: number }[] }>({ x: 0, y: 0, particles: [] });
   const worldScrollSpeedRef = useRef(0);
+  const lastLandedPadRef = useRef<MossPad | null>(null);
   
   const [isMuted, setIsMuted] = useState(false);
   const gameLoopRef = useRef<number>();
@@ -126,6 +129,8 @@ export const GameCanvas = () => {
         speed: 0.4,
         breathPhase: Math.random() * 360,
         glowIntensity: 0.6,
+        isDeflating: false,
+        deflateProgress: 0,
       });
     }
     
@@ -252,8 +257,22 @@ export const GameCanvas = () => {
           speed: 0.4,
           breathPhase: Math.random() * 360,
           glowIntensity: 0.6,
+          isDeflating: false,
+          deflateProgress: 0,
         });
       }
+      
+      // Update deflating pads
+      mossPadsRef.current = mossPadsRef.current.map(p => {
+        if (p.isDeflating) {
+          const newProgress = p.deflateProgress + 0.08;
+          if (newProgress >= 1) {
+            return null; // Remove fully deflated pads
+          }
+          return { ...p, deflateProgress: newProgress };
+        }
+        return p;
+      }).filter((p): p is MossPad => p !== null);
       
       // Update particles (simplified)
       sporesRef.current = sporesRef.current.map(s => ({
@@ -333,6 +352,14 @@ export const GameCanvas = () => {
         setScore(newScore);
         soundEffects.playBoing();
         toast.success('BOING!', { duration: 500 });
+        
+        // Deflate the previous pad if it's still visible
+        if (lastLandedPadRef.current && lastLandedPadRef.current !== landedPad) {
+          mossPadsRef.current = mossPadsRef.current.map(p => 
+            p === lastLandedPadRef.current ? { ...p, isDeflating: true } : p
+          );
+        }
+        lastLandedPadRef.current = landedPad;
         
         // Spore burst every 25th jump
         if (newScore % 25 === 0) {
@@ -473,6 +500,8 @@ export const GameCanvas = () => {
           {mossPadsRef.current.map((pad, i) => {
             const breathScale = 1 + Math.sin(pad.breathPhase * Math.PI / 180) * 0.05;
             const glowPulse = Math.sin(pad.breathPhase * Math.PI / 180) * 0.3 + 0.7;
+            const deflateScale = pad.isDeflating ? 1 - pad.deflateProgress : 1;
+            const deflateOpacity = pad.isDeflating ? 1 - pad.deflateProgress : 1;
             
             return (
               <div
@@ -481,6 +510,7 @@ export const GameCanvas = () => {
                 style={{
                   left: `${pad.x}%`,
                   top: `${pad.y}%`,
+                  opacity: deflateOpacity,
                 }}
               >
                 <div 
@@ -488,7 +518,9 @@ export const GameCanvas = () => {
                   style={{
                     width: `${pad.width}vw`,
                     height: `${pad.height}vh`,
-                    transform: isMobile ? 'none' : `scale(${breathScale}, ${1 / breathScale})`,
+                    transform: isMobile 
+                      ? `scale(${deflateScale})` 
+                      : `scale(${breathScale * deflateScale}, ${(1 / breathScale) * deflateScale})`,
                   }}
                 >
                   {/* Glow layer - simplified on mobile */}
@@ -512,7 +544,7 @@ export const GameCanvas = () => {
                     }}
                   />
                 </div>
-                {score < 3 && (
+                {score < 3 && !pad.isDeflating && (
                   <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-primary whitespace-nowrap bg-background/80 px-2 py-1 rounded z-20">
                     LAND HERE
                   </div>
