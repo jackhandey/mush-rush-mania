@@ -234,13 +234,13 @@ export const GameCanvas = () => {
         const lastX = mossPadsRef.current.length > 0 ? Math.max(...mossPadsRef.current.map(p => p.x)) : 100;
         const padWidth = isMobile ? 16 : 9;
         const padHeight = isMobile ? 5 : 3;
-        // Progressive difficulty based on score
-        const difficultyFactor = Math.min(score / 8, 1); // Maxes out at score 8
-        const minSpacing = isMobile ? (18 + difficultyFactor * 12) : (16 + difficultyFactor * 10);
-        const maxSpacing = isMobile ? (22 + difficultyFactor * 20) : (20 + difficultyFactor * 18);
-        const spacing = minSpacing + Math.random() * (maxSpacing - minSpacing);
-        const baseY = 75;
-        const yVariance = (isMobile ? 6 : 8) + (difficultyFactor * 6);
+      // Progressive difficulty based on score
+      const difficultyFactor = Math.min(score / 8, 1); // Maxes out at score 8
+      const minSpacing = isMobile ? (18 + difficultyFactor * 8) : (16 + difficultyFactor * 10);
+      const maxSpacing = isMobile ? (22 + difficultyFactor * 14) : (20 + difficultyFactor * 18);
+      const spacing = minSpacing + Math.random() * (maxSpacing - minSpacing);
+      const baseY = 75;
+      const yVariance = (isMobile ? 6 : 8) + (difficultyFactor * 4);
         const randomY = baseY + (Math.random() - 0.5) * yVariance;
         
         mossPadsRef.current.push({
