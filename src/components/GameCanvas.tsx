@@ -251,10 +251,13 @@ export const GameCanvas = () => {
       const maxSpacing = isMobile ? (22 + difficultyFactor * 14) : (20 + difficultyFactor * 18);
       const spacing = minSpacing + Math.random() * (maxSpacing - minSpacing);
       const baseY = 75;
-      // Vertical variance kicks in after score > 13, increases again after score > 24
+      // Vertical variance kicks in after score > 13, increases at 24, then every 33 pads after
       let yVariance = 4;
       if (score > 24) {
-        yVariance = (isMobile ? 22 : 28) + (difficultyFactor * 15);
+        const baseVariance = isMobile ? 22 : 28;
+        const incrementsAfter24 = Math.floor((score - 24) / 33);
+        const additionalVariance = incrementsAfter24 * (isMobile ? 4 : 5);
+        yVariance = baseVariance + additionalVariance + (difficultyFactor * 15);
       } else if (score > 13) {
         yVariance = (isMobile ? 14 : 18) + (difficultyFactor * 10);
       }
