@@ -970,6 +970,33 @@ class SoundEffects {
     foam.stop(now + 0.9);
   }
 
+  // Staircase sound (142nd jump) - ascending steps
+  playStaircase() {
+    if (this.isMuted) return;
+    
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    // Ascending notes like walking up stairs
+    const notes = [220, 262, 294, 330, 370, 415, 466, 523];
+    notes.forEach((freq, i) => {
+      const step = ctx.createOscillator();
+      const stepGain = ctx.createGain();
+      step.connect(stepGain);
+      stepGain.connect(ctx.destination);
+      
+      const start = now + i * 0.08;
+      step.frequency.setValueAtTime(freq, start);
+      step.type = 'triangle';
+      
+      stepGain.gain.setValueAtTime(0.2, start);
+      stepGain.gain.exponentialRampToValueAtTime(0.01, start + 0.1);
+      
+      step.start(start);
+      step.stop(start + 0.1);
+    });
+  }
+
   toggleMute() {
     this.isMuted = !this.isMuted;
     return this.isMuted;

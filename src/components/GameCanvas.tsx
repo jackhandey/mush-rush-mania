@@ -392,6 +392,8 @@ export const GameCanvas = () => {
           soundEffects.playHulk();
         } else if (newScore === 88 || newScore === 300) {
           soundEffects.playSword();
+        } else if (newScore === 142) {
+          soundEffects.playStaircase();
         } else if (newScore === 143) {
           soundEffects.playLove();
         } else if (newScore === 187) {
