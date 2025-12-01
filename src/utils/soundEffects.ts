@@ -722,6 +722,254 @@ class SoundEffects {
     warm.stop(now + 0.6);
   }
 
+  // Record scratch sound (187th jump)
+  playRecordScratch() {
+    if (this.isMuted) return;
+    
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    // Vinyl scratch - rapid frequency sweep
+    const scratch = ctx.createOscillator();
+    const scratchGain = ctx.createGain();
+    scratch.connect(scratchGain);
+    scratchGain.connect(ctx.destination);
+    
+    scratch.frequency.setValueAtTime(1000, now);
+    scratch.frequency.exponentialRampToValueAtTime(200, now + 0.1);
+    scratch.frequency.exponentialRampToValueAtTime(800, now + 0.2);
+    scratch.frequency.exponentialRampToValueAtTime(150, now + 0.3);
+    scratch.type = 'sawtooth';
+    
+    scratchGain.gain.setValueAtTime(0.25, now);
+    scratchGain.gain.setValueAtTime(0.15, now + 0.1);
+    scratchGain.gain.setValueAtTime(0.25, now + 0.2);
+    scratchGain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+    
+    // Noise layer for texture
+    const noise = ctx.createOscillator();
+    const noiseGain = ctx.createGain();
+    noise.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    
+    noise.frequency.setValueAtTime(100, now);
+    noise.type = 'triangle';
+    
+    noiseGain.gain.setValueAtTime(0.1, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+    
+    scratch.start(now);
+    noise.start(now);
+    scratch.stop(now + 0.35);
+    noise.stop(now + 0.3);
+  }
+
+  // Police siren (209th jump)
+  playPoliceSiren() {
+    if (this.isMuted) return;
+    
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    const siren = ctx.createOscillator();
+    const sirenGain = ctx.createGain();
+    siren.connect(sirenGain);
+    sirenGain.connect(ctx.destination);
+    
+    // Oscillating between two frequencies
+    siren.frequency.setValueAtTime(600, now);
+    siren.frequency.linearRampToValueAtTime(900, now + 0.15);
+    siren.frequency.linearRampToValueAtTime(600, now + 0.3);
+    siren.frequency.linearRampToValueAtTime(900, now + 0.45);
+    siren.frequency.linearRampToValueAtTime(600, now + 0.6);
+    siren.type = 'sine';
+    
+    sirenGain.gain.setValueAtTime(0.25, now);
+    sirenGain.gain.exponentialRampToValueAtTime(0.01, now + 0.65);
+    
+    siren.start(now);
+    siren.stop(now + 0.65);
+  }
+
+  // Pac man wakka wakka (256th jump)
+  playPacman() {
+    if (this.isMuted) return;
+    
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    // Classic wakka wakka sound
+    for (let i = 0; i < 4; i++) {
+      const wakka = ctx.createOscillator();
+      const wakkaGain = ctx.createGain();
+      wakka.connect(wakkaGain);
+      wakkaGain.connect(ctx.destination);
+      
+      const start = now + i * 0.12;
+      const isHigh = i % 2 === 0;
+      wakka.frequency.setValueAtTime(isHigh ? 500 : 400, start);
+      wakka.frequency.exponentialRampToValueAtTime(isHigh ? 300 : 200, start + 0.08);
+      wakka.type = 'square';
+      
+      wakkaGain.gain.setValueAtTime(0.2, start);
+      wakkaGain.gain.exponentialRampToValueAtTime(0.01, start + 0.1);
+      
+      wakka.start(start);
+      wakka.stop(start + 0.1);
+    }
+  }
+
+  // Pokemon sound (151st jump) - capture/encounter jingle
+  playPokemon() {
+    if (this.isMuted) return;
+    
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    // Ascending capture jingle
+    const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      const start = now + i * 0.1;
+      osc.frequency.setValueAtTime(freq, start);
+      osc.type = 'square';
+      
+      gain.gain.setValueAtTime(0.2, start);
+      gain.gain.exponentialRampToValueAtTime(0.01, start + 0.12);
+      
+      osc.start(start);
+      osc.stop(start + 0.12);
+    });
+  }
+
+  // Punk rock guitar (138th, 182nd jump)
+  playPunkGuitar() {
+    if (this.isMuted) return;
+    
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    // Power chord with distortion
+    const freqs = [82, 123, 164]; // E2, B2, E3 power chord
+    freqs.forEach((freq) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.frequency.setValueAtTime(freq, now);
+      osc.type = 'sawtooth';
+      
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.setValueAtTime(0.25, now + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+      
+      osc.start(now);
+      osc.stop(now + 0.4);
+    });
+    
+    // Palm mute hit
+    const mute = ctx.createOscillator();
+    const muteGain = ctx.createGain();
+    mute.connect(muteGain);
+    muteGain.connect(ctx.destination);
+    
+    mute.frequency.setValueAtTime(100, now);
+    mute.type = 'square';
+    
+    muteGain.gain.setValueAtTime(0.3, now);
+    muteGain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+    
+    mute.start(now);
+    mute.stop(now + 0.08);
+  }
+
+  // Traffic sound (212th jump)
+  playTraffic() {
+    if (this.isMuted) return;
+    
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    // Car horn beep
+    const horn = ctx.createOscillator();
+    const hornGain = ctx.createGain();
+    horn.connect(hornGain);
+    hornGain.connect(ctx.destination);
+    
+    horn.frequency.setValueAtTime(350, now);
+    horn.type = 'sine';
+    
+    hornGain.gain.setValueAtTime(0.3, now);
+    hornGain.gain.setValueAtTime(0.01, now + 0.2);
+    hornGain.gain.setValueAtTime(0.25, now + 0.25);
+    hornGain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+    
+    // Engine rumble layer
+    const engine = ctx.createOscillator();
+    const engineGain = ctx.createGain();
+    engine.connect(engineGain);
+    engineGain.connect(ctx.destination);
+    
+    engine.frequency.setValueAtTime(60, now);
+    engine.type = 'sawtooth';
+    
+    engineGain.gain.setValueAtTime(0.1, now);
+    engineGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+    
+    horn.start(now);
+    engine.start(now);
+    horn.stop(now + 0.45);
+    engine.stop(now + 0.5);
+  }
+
+  // Ocean waves (310th jump)
+  playOcean() {
+    if (this.isMuted) return;
+    
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    // Wave swell using filtered noise simulation
+    const wave = ctx.createOscillator();
+    const waveGain = ctx.createGain();
+    wave.connect(waveGain);
+    waveGain.connect(ctx.destination);
+    
+    wave.frequency.setValueAtTime(100, now);
+    wave.frequency.linearRampToValueAtTime(200, now + 0.4);
+    wave.frequency.linearRampToValueAtTime(80, now + 0.8);
+    wave.type = 'sine';
+    
+    waveGain.gain.setValueAtTime(0.01, now);
+    waveGain.gain.linearRampToValueAtTime(0.2, now + 0.3);
+    waveGain.gain.linearRampToValueAtTime(0.25, now + 0.5);
+    waveGain.gain.exponentialRampToValueAtTime(0.01, now + 1.0);
+    
+    // High frequency foam/crash
+    const foam = ctx.createOscillator();
+    const foamGain = ctx.createGain();
+    foam.connect(foamGain);
+    foamGain.connect(ctx.destination);
+    
+    foam.frequency.setValueAtTime(800, now + 0.3);
+    foam.frequency.exponentialRampToValueAtTime(400, now + 0.7);
+    foam.type = 'triangle';
+    
+    foamGain.gain.setValueAtTime(0.01, now + 0.3);
+    foamGain.gain.linearRampToValueAtTime(0.1, now + 0.5);
+    foamGain.gain.exponentialRampToValueAtTime(0.01, now + 0.9);
+    
+    wave.start(now);
+    foam.start(now + 0.3);
+    wave.stop(now + 1.0);
+    foam.stop(now + 0.9);
+  }
+
   toggleMute() {
     this.isMuted = !this.isMuted;
     return this.isMuted;

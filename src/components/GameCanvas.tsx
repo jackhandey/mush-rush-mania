@@ -390,10 +390,24 @@ export const GameCanvas = () => {
           soundEffects.playFiery();
         } else if (newScore === 52) {
           soundEffects.playHulk();
-        } else if (newScore === 88) {
+        } else if (newScore === 88 || newScore === 300) {
           soundEffects.playSword();
         } else if (newScore === 143) {
           soundEffects.playLove();
+        } else if (newScore === 187) {
+          soundEffects.playRecordScratch();
+        } else if (newScore === 209) {
+          soundEffects.playPoliceSiren();
+        } else if (newScore === 256) {
+          soundEffects.playPacman();
+        } else if (newScore === 151) {
+          soundEffects.playPokemon();
+        } else if (newScore === 138 || newScore === 182) {
+          soundEffects.playPunkGuitar();
+        } else if (newScore === 212) {
+          soundEffects.playTraffic();
+        } else if (newScore === 310) {
+          soundEffects.playOcean();
         } else if ([4, 8, 15, 16, 23].includes(newScore)) {
           soundEffects.playRatchet();
         } else if (newScore === 42) {
