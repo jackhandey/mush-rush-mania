@@ -44,6 +44,7 @@ export const GameCanvas = () => {
   const [gameState, setGameState] = useState<'menu' | 'playing' | 'crashed'>('menu');
   const [score, setScore] = useState(0);
   const [renderTick, setRenderTick] = useState(0); // Single state to trigger renders
+  const [isSpinning, setIsSpinning] = useState(false); // For 113th jump spin effect
   
   // Use refs for frequently updated values to avoid re-renders
   const mushroomPosRef = useRef({ x: 50, y: 80 });
@@ -59,6 +60,7 @@ export const GameCanvas = () => {
   const worldScrollSpeedRef = useRef(0);
   const lastLandedPadIdRef = useRef<number | null>(null);
   const nextPadIdRef = useRef(0);
+  const spinRotationRef = useRef(0);
   
   const [isMuted, setIsMuted] = useState(false);
   const gameLoopRef = useRef<number>();
@@ -117,9 +119,9 @@ export const GameCanvas = () => {
         currentX += spacing;
       }
       
-      // Variable Y position - less variance early, more later
+      // Variable Y position - significant variance from the start, more later
       const baseY = 75;
-      const yVariance = (isMobile ? 6 : 8) + (i * 1.5);
+      const yVariance = (isMobile ? 12 : 15) + (i * 3);
       const randomY = baseY + (Math.random() - 0.5) * yVariance;
       
       newMossPads.push({
@@ -249,8 +251,9 @@ export const GameCanvas = () => {
       const maxSpacing = isMobile ? (22 + difficultyFactor * 14) : (20 + difficultyFactor * 18);
       const spacing = minSpacing + Math.random() * (maxSpacing - minSpacing);
       const baseY = 75;
-      const yVariance = (isMobile ? 6 : 8) + (difficultyFactor * 4);
-        const randomY = baseY + (Math.random() - 0.5) * yVariance;
+      // Much more vertical variance, especially as game progresses
+      const yVariance = (isMobile ? 14 : 18) + (difficultyFactor * 10);
+      const randomY = baseY + (Math.random() - 0.5) * yVariance;
         
         mossPadsRef.current.push({
           id: nextPadIdRef.current++,
@@ -358,6 +361,31 @@ export const GameCanvas = () => {
         soundEffects.playBoing();
         toast.success('BOING!', { duration: 500 });
         
+        // Easter egg sounds at specific scores
+        if (newScore === 451) {
+          soundEffects.playShock();
+        } else if (newScore === 47) {
+          soundEffects.playSpaceship();
+        } else if (newScore === 217) {
+          soundEffects.playGhost();
+        } else if (newScore === 101) {
+          soundEffects.playAnnoying();
+        } else if (newScore === 37) {
+          soundEffects.playSuck();
+        } else if ([4, 8, 15, 16, 23].includes(newScore)) {
+          soundEffects.playRatchet();
+        } else if (newScore === 42) {
+          soundEffects.playRatchet();
+          soundEffects.playAirSigh();
+        }
+        
+        // 113th jump - mushroom spin
+        if (newScore === 113) {
+          setIsSpinning(true);
+          spinRotationRef.current = 0;
+          setTimeout(() => setIsSpinning(false), 1000);
+        }
+        
         // Deflate the previous pad if it's still visible
         if (lastLandedPadIdRef.current !== null && lastLandedPadIdRef.current !== landedPad.id) {
           mossPadsRef.current = mossPadsRef.current.map(p => 
@@ -389,7 +417,15 @@ export const GameCanvas = () => {
         }, 200);
         
         mushroomPosRef.current = { x: mushroomPosRef.current.x, y: landedPad.y - 5 };
-        launch();
+        
+        // 11th jump - louder launch
+        if (newScore === 11) {
+          soundEffects.playLaunchLoud();
+          velocityRef.current = { x: isMobile ? 85 : 24.14, y: isMobile ? -14 : -17.8 };
+          isDroppingRef.current = false;
+        } else {
+          launch();
+        }
       } else {
         mushroomPosRef.current = { x: mushroomPosRef.current.x, y: newY };
       }
@@ -504,6 +540,7 @@ export const GameCanvas = () => {
           <MemoizedGrumblecap 
             isDropping={isDroppingRef.current} 
             isCrashed={false}
+            isSpinning={isSpinning}
             style={{ 
               left: `${mushroomPosRef.current.x}%`, 
               top: `${mushroomPosRef.current.y}%`,
@@ -666,12 +703,16 @@ export const GameCanvas = () => {
 };
 
 // Memoized Grumblecap wrapper to prevent unnecessary re-renders
-const MemoizedGrumblecap = memo(({ isDropping, isCrashed, style }: { 
+const MemoizedGrumblecap = memo(({ isDropping, isCrashed, isSpinning, style }: { 
   isDropping: boolean; 
   isCrashed: boolean;
+  isSpinning?: boolean;
   style?: React.CSSProperties;
 }) => (
-  <div className="absolute transition-transform z-20" style={style}>
+  <div 
+    className={`absolute transition-transform z-20 ${isSpinning ? 'animate-spin' : ''}`} 
+    style={{ ...style, animationDuration: isSpinning ? '0.3s' : undefined }}
+  >
     <Grumblecap isDropping={isDropping} isCrashed={isCrashed} />
   </div>
 ));
