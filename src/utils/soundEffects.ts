@@ -373,31 +373,50 @@ class SoundEffects {
     noise.stop(now + 0.35);
   }
 
-  // Mechanical ratchet / rapid flutter (LOST numbers: 4, 8, 15, 16, 23, 42)
+  // Positive jet whoosh (LOST numbers: 4, 8, 15, 16, 23, 42)
   playRatchet() {
     if (this.isMuted) return;
     
     const ctx = this.getContext();
     const now = ctx.currentTime;
     
-    // Rapid clicking sequence
-    for (let i = 0; i < 8; i++) {
-      const osc = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-      
-      osc.connect(gainNode);
-      gainNode.connect(ctx.destination);
-      
-      const startTime = now + i * 0.025;
-      osc.frequency.setValueAtTime(300 - i * 20, startTime);
-      osc.type = 'square';
-      
-      gainNode.gain.setValueAtTime(0.25, startTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.02);
-      
-      osc.start(startTime);
-      osc.stop(startTime + 0.025);
-    }
+    // Rising, positive jet whoosh sound
+    const jet = ctx.createOscillator();
+    const jetGain = ctx.createGain();
+    
+    jet.connect(jetGain);
+    jetGain.connect(ctx.destination);
+    
+    // Rising frequency for positive feel
+    jet.frequency.setValueAtTime(150, now);
+    jet.frequency.exponentialRampToValueAtTime(600, now + 0.15);
+    jet.frequency.exponentialRampToValueAtTime(400, now + 0.3);
+    jet.type = 'sine';
+    
+    jetGain.gain.setValueAtTime(0.01, now);
+    jetGain.gain.linearRampToValueAtTime(0.3, now + 0.08);
+    jetGain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+    
+    // Add airy whoosh layer
+    const whoosh = ctx.createOscillator();
+    const whooshGain = ctx.createGain();
+    
+    whoosh.connect(whooshGain);
+    whooshGain.connect(ctx.destination);
+    
+    whoosh.frequency.setValueAtTime(800, now);
+    whoosh.frequency.exponentialRampToValueAtTime(1500, now + 0.2);
+    whoosh.frequency.exponentialRampToValueAtTime(1000, now + 0.35);
+    whoosh.type = 'triangle';
+    
+    whooshGain.gain.setValueAtTime(0.01, now);
+    whooshGain.gain.linearRampToValueAtTime(0.12, now + 0.1);
+    whooshGain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+    
+    jet.start(now);
+    whoosh.start(now);
+    jet.stop(now + 0.35);
+    whoosh.stop(now + 0.35);
   }
 
   // Air release with sigh (42nd jump - combines with ratchet)
