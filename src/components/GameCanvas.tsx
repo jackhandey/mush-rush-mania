@@ -304,12 +304,12 @@ export const GameCanvas = () => {
         y: g.y + g.speed * Math.sin(Date.now() * 0.01) * 0.2,
       }));
       
-      // Update spore burst
+      // Update spore burst - slower fade for visibility
       if (sporeBurstRef.current.particles.length > 0) {
         sporeBurstRef.current = {
           ...sporeBurstRef.current,
           particles: sporeBurstRef.current.particles
-            .map(p => ({ ...p, distance: p.distance + 2, opacity: p.opacity - 0.03 }))
+            .map(p => ({ ...p, distance: p.distance + 1.5, opacity: p.opacity - 0.015 }))
             .filter(p => p.opacity > 0),
         };
       }
@@ -368,14 +368,14 @@ export const GameCanvas = () => {
         // Spore burst every 25th jump
         if (newScore % 25 === 0) {
           const burstParticles = [];
-          for (let i = 0; i < 12; i++) {
+          for (let i = 0; i < 16; i++) {
             burstParticles.push({
-              angle: (i * 30) + Math.random() * 15,
+              angle: (i * 22.5) + Math.random() * 10,
               distance: 0,
               opacity: 1,
             });
           }
-          sporeBurstRef.current = { x: mushroomPosRef.current.x, y: mushroomPosRef.current.y, particles: burstParticles };
+          sporeBurstRef.current = { x: mushroomPosRef.current.x + 4, y: mushroomPosRef.current.y + 4, particles: burstParticles };
         }
         
         mossPadsRef.current = mossPadsRef.current.map(p => 
@@ -447,7 +447,18 @@ export const GameCanvas = () => {
         </div>
       )}
 
-      {/* Background Layer - Far (simplified on mobile) */}
+      {/* Lightweight Atmospheric Background - CSS only, no JS particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Soft ambient glow spots */}
+        <div className="absolute top-[15%] left-[10%] w-32 h-32 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute top-[60%] right-[15%] w-40 h-40 rounded-full bg-accent/8 blur-3xl" />
+        <div className="absolute bottom-[20%] left-[25%] w-24 h-24 rounded-full bg-primary/4 blur-2xl" />
+        {/* Subtle vertical light rays */}
+        <div className="absolute top-0 left-[20%] w-px h-[40%] bg-gradient-to-b from-foreground/5 to-transparent" />
+        <div className="absolute top-0 right-[35%] w-px h-[30%] bg-gradient-to-b from-foreground/3 to-transparent" />
+      </div>
+
+      {/* Background Layer - Far (desktop only) */}
       {!isMobile && (
         <div className="absolute inset-0 overflow-hidden opacity-40 blur-md">
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-game-bgStart via-accent/20 to-game-bgEnd" />
@@ -619,10 +630,10 @@ export const GameCanvas = () => {
             style={{
               left: `${x}%`,
               top: `${y}%`,
-              width: '6px',
-              height: '6px',
-              background: 'hsl(var(--game-sporeGlow))',
-              boxShadow: '0 0 8px hsl(var(--game-sporeGlow))',
+              width: isMobile ? '10px' : '8px',
+              height: isMobile ? '10px' : '8px',
+              background: 'hsl(var(--primary))',
+              boxShadow: '0 0 12px hsl(var(--primary)), 0 0 20px hsl(var(--primary) / 0.5)',
               opacity: p.opacity,
             }}
           />
