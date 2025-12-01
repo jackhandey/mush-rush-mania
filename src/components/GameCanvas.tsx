@@ -119,9 +119,9 @@ export const GameCanvas = () => {
         currentX += spacing;
       }
       
-      // Variable Y position - significant variance from the start, more later
+      // Variable Y position - minimal variance until after pad 13
       const baseY = 75;
-      const yVariance = (isMobile ? 12 : 15) + (i * 3);
+      const yVariance = i > 13 ? ((isMobile ? 12 : 15) + ((i - 13) * 3)) : 4;
       const randomY = baseY + (Math.random() - 0.5) * yVariance;
       
       newMossPads.push({
@@ -251,8 +251,8 @@ export const GameCanvas = () => {
       const maxSpacing = isMobile ? (22 + difficultyFactor * 14) : (20 + difficultyFactor * 18);
       const spacing = minSpacing + Math.random() * (maxSpacing - minSpacing);
       const baseY = 75;
-      // Much more vertical variance, especially as game progresses
-      const yVariance = (isMobile ? 14 : 18) + (difficultyFactor * 10);
+      // Vertical variance only kicks in after score > 13
+      const yVariance = score > 13 ? ((isMobile ? 14 : 18) + (difficultyFactor * 10)) : 4;
       const randomY = baseY + (Math.random() - 0.5) * yVariance;
         
         mossPadsRef.current.push({
