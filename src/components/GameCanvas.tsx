@@ -325,6 +325,16 @@ export const GameCanvas = () => {
         velocityRef.current = { ...velocity, y: velocity.y + gravity };
       }
       
+      // Ceiling constraint - prevent going off top of screen
+      const minY = 5; // Keep mushroom at least 5% from top
+      if (newY < minY) {
+        newY = minY;
+        // Stop upward momentum when hitting ceiling
+        if (velocityRef.current.y < 0) {
+          velocityRef.current = { ...velocityRef.current, y: 0 };
+        }
+      }
+      
       if (newY > 82 || newY < 0) {
         setGameState('crashed');
         worldScrollSpeedRef.current = 0;
