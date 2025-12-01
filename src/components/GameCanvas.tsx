@@ -251,8 +251,13 @@ export const GameCanvas = () => {
       const maxSpacing = isMobile ? (22 + difficultyFactor * 14) : (20 + difficultyFactor * 18);
       const spacing = minSpacing + Math.random() * (maxSpacing - minSpacing);
       const baseY = 75;
-      // Vertical variance only kicks in after score > 13
-      const yVariance = score > 13 ? ((isMobile ? 14 : 18) + (difficultyFactor * 10)) : 4;
+      // Vertical variance kicks in after score > 13, increases again after score > 24
+      let yVariance = 4;
+      if (score > 24) {
+        yVariance = (isMobile ? 22 : 28) + (difficultyFactor * 15);
+      } else if (score > 13) {
+        yVariance = (isMobile ? 14 : 18) + (difficultyFactor * 10);
+      }
       const randomY = baseY + (Math.random() - 0.5) * yVariance;
         
         mossPadsRef.current.push({
@@ -570,6 +575,9 @@ export const GameCanvas = () => {
             const glowPulse = Math.sin(pad.breathPhase * Math.PI / 180) * 0.3 + 0.7;
             const deflateScale = pad.isDeflating ? 1 - pad.deflateProgress : 1;
             const deflateOpacity = pad.isDeflating ? 1 - pad.deflateProgress : 1;
+            // 27th pad (id 26, 0-indexed) is extra faded
+            const is27thPad = pad.id === 26;
+            const baseOpacity = is27thPad ? 0.35 : 1;
             
             return (
               <div
@@ -578,7 +586,7 @@ export const GameCanvas = () => {
                 style={{
                   left: `${pad.x}%`,
                   top: `${pad.y}%`,
-                  opacity: deflateOpacity,
+                  opacity: deflateOpacity * baseOpacity,
                 }}
               >
                 <div 
