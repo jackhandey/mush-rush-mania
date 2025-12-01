@@ -193,7 +193,7 @@ export const GameCanvas = () => {
     if (now - lastTapTime.current < 100) return;
     lastTapTime.current = now;
     
-    if (gameState === 'menu' || gameState === 'crashed') {
+    if (gameState === 'menu') {
       startGame();
       return;
     }
@@ -366,8 +366,8 @@ export const GameCanvas = () => {
         }
         lastLandedPadIdRef.current = landedPad.id;
         
-        // Spore burst every 25th jump
-        if (newScore % 25 === 0) {
+        // Spore burst every 7th jump
+        if (newScore % 7 === 0) {
           const burstParticles = [];
           for (let i = 0; i < 16; i++) {
             burstParticles.push({
@@ -649,20 +649,16 @@ export const GameCanvas = () => {
             <Grumblecap isDropping={false} isCrashed={true} />
           </div>
           <p className="text-4xl font-bold text-foreground mb-2">Score: {score}</p>
-          {isMobile ? (
-            <Button 
-              size="lg"
-              onClick={(e) => {
-                e.stopPropagation();
-                startGame();
-              }}
-              className="text-2xl px-8 py-6 mt-4"
-            >
-              Try Again
-            </Button>
-          ) : (
-            <p className="text-xl text-muted-foreground">Tap to Retry</p>
-          )}
+          <Button 
+            size="lg"
+            onClick={(e) => {
+              e.stopPropagation();
+              startGame();
+            }}
+            className="text-2xl px-8 py-6 mt-4"
+          >
+            Try Again
+          </Button>
         </div>
       )}
     </div>
