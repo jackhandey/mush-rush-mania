@@ -444,7 +444,7 @@ export const GameCanvas = () => {
             <Grumblecap isDropping={false} isCrashed={false} />
           </div>
           
-          <p className="text-xl text-muted-foreground mb-2">Tap to Land</p>
+          <p className="text-xl text-muted-foreground mb-2">tap to land on the moss pads</p>
           <p className="text-3xl text-foreground font-bold animate-pulse">TAP TO START</p>
         </div>
       )}
