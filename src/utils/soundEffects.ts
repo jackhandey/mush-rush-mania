@@ -461,6 +461,267 @@ class SoundEffects {
     sigh.stop(now + 0.9);
   }
 
+  // Lightsaber sound (66th jump)
+  playLightsaber() {
+    if (this.isMuted) return;
+    
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    // Iconic hum with ignition
+    const ignite = ctx.createOscillator();
+    const igniteGain = ctx.createGain();
+    ignite.connect(igniteGain);
+    igniteGain.connect(ctx.destination);
+    
+    ignite.frequency.setValueAtTime(100, now);
+    ignite.frequency.exponentialRampToValueAtTime(180, now + 0.15);
+    ignite.type = 'sawtooth';
+    
+    igniteGain.gain.setValueAtTime(0.01, now);
+    igniteGain.gain.linearRampToValueAtTime(0.35, now + 0.1);
+    igniteGain.gain.setValueAtTime(0.25, now + 0.15);
+    igniteGain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+    
+    // Hum layer
+    const hum = ctx.createOscillator();
+    const humGain = ctx.createGain();
+    hum.connect(humGain);
+    humGain.connect(ctx.destination);
+    
+    hum.frequency.setValueAtTime(120, now);
+    hum.type = 'sine';
+    
+    humGain.gain.setValueAtTime(0.01, now + 0.1);
+    humGain.gain.linearRampToValueAtTime(0.15, now + 0.2);
+    humGain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+    
+    ignite.start(now);
+    hum.start(now);
+    ignite.stop(now + 0.6);
+    hum.stop(now + 0.6);
+  }
+
+  // Nerdy sound (73rd jump) - dial-up modem / computer beep
+  playNerdy() {
+    if (this.isMuted) return;
+    
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    // Classic computer beep sequence
+    const frequencies = [800, 1000, 900, 1100, 850];
+    frequencies.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      const start = now + i * 0.08;
+      osc.frequency.setValueAtTime(freq, start);
+      osc.type = 'square';
+      
+      gain.gain.setValueAtTime(0.15, start);
+      gain.gain.exponentialRampToValueAtTime(0.01, start + 0.06);
+      
+      osc.start(start);
+      osc.stop(start + 0.07);
+    });
+  }
+
+  // Scary but upbeat (19th jump) - minor chord burst with upward resolve
+  playScaryUpbeat() {
+    if (this.isMuted) return;
+    
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    // Minor chord stinger
+    const freqs = [220, 261, 330]; // A minor-ish
+    freqs.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.5, now + 0.3);
+      osc.type = 'triangle';
+      
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+      
+      osc.start(now);
+      osc.stop(now + 0.35);
+    });
+  }
+
+  // Upbeat fiery sound (64th jump)
+  playFiery() {
+    if (this.isMuted) return;
+    
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    // Crackling fire with upward whoosh
+    const crackle = ctx.createOscillator();
+    const crackleGain = ctx.createGain();
+    crackle.connect(crackleGain);
+    crackleGain.connect(ctx.destination);
+    
+    crackle.frequency.setValueAtTime(200, now);
+    crackle.frequency.exponentialRampToValueAtTime(800, now + 0.2);
+    crackle.frequency.exponentialRampToValueAtTime(1200, now + 0.35);
+    crackle.type = 'sawtooth';
+    
+    crackleGain.gain.setValueAtTime(0.2, now);
+    crackleGain.gain.setValueAtTime(0.3, now + 0.15);
+    crackleGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+    
+    // Pop layer
+    const pop = ctx.createOscillator();
+    const popGain = ctx.createGain();
+    pop.connect(popGain);
+    popGain.connect(ctx.destination);
+    
+    pop.frequency.setValueAtTime(400, now + 0.1);
+    pop.frequency.exponentialRampToValueAtTime(100, now + 0.2);
+    pop.type = 'sine';
+    
+    popGain.gain.setValueAtTime(0.15, now + 0.1);
+    popGain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+    
+    crackle.start(now);
+    pop.start(now + 0.1);
+    crackle.stop(now + 0.4);
+    pop.stop(now + 0.25);
+  }
+
+  // Hulk smash sound (52nd jump) - deep powerful hit with roar
+  playHulk() {
+    if (this.isMuted) return;
+    
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    // Deep impact
+    const impact = ctx.createOscillator();
+    const impactGain = ctx.createGain();
+    impact.connect(impactGain);
+    impactGain.connect(ctx.destination);
+    
+    impact.frequency.setValueAtTime(80, now);
+    impact.frequency.exponentialRampToValueAtTime(40, now + 0.3);
+    impact.type = 'sine';
+    
+    impactGain.gain.setValueAtTime(0.5, now);
+    impactGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+    
+    // Roar layer
+    const roar = ctx.createOscillator();
+    const roarGain = ctx.createGain();
+    roar.connect(roarGain);
+    roarGain.connect(ctx.destination);
+    
+    roar.frequency.setValueAtTime(150, now);
+    roar.frequency.linearRampToValueAtTime(200, now + 0.15);
+    roar.frequency.linearRampToValueAtTime(120, now + 0.4);
+    roar.type = 'sawtooth';
+    
+    roarGain.gain.setValueAtTime(0.01, now);
+    roarGain.gain.linearRampToValueAtTime(0.25, now + 0.1);
+    roarGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+    
+    impact.start(now);
+    roar.start(now);
+    impact.stop(now + 0.4);
+    roar.stop(now + 0.5);
+  }
+
+  // Sword sound (88th jump) - metallic swing and clash
+  playSword() {
+    if (this.isMuted) return;
+    
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    // Metallic ring
+    const ring = ctx.createOscillator();
+    const ringGain = ctx.createGain();
+    ring.connect(ringGain);
+    ringGain.connect(ctx.destination);
+    
+    ring.frequency.setValueAtTime(2000, now);
+    ring.frequency.exponentialRampToValueAtTime(800, now + 0.3);
+    ring.type = 'sine';
+    
+    ringGain.gain.setValueAtTime(0.3, now);
+    ringGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+    
+    // Whoosh layer
+    const whoosh = ctx.createOscillator();
+    const whooshGain = ctx.createGain();
+    whoosh.connect(whooshGain);
+    whooshGain.connect(ctx.destination);
+    
+    whoosh.frequency.setValueAtTime(300, now);
+    whoosh.frequency.exponentialRampToValueAtTime(1500, now + 0.1);
+    whoosh.frequency.exponentialRampToValueAtTime(500, now + 0.2);
+    whoosh.type = 'triangle';
+    
+    whooshGain.gain.setValueAtTime(0.2, now);
+    whooshGain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+    
+    ring.start(now);
+    whoosh.start(now);
+    ring.stop(now + 0.4);
+    whoosh.stop(now + 0.25);
+  }
+
+  // Love sound (143rd jump) - warm, melodic heartbeat
+  playLove() {
+    if (this.isMuted) return;
+    
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    // Heartbeat pattern - two beats
+    for (let i = 0; i < 2; i++) {
+      const beat = ctx.createOscillator();
+      const beatGain = ctx.createGain();
+      beat.connect(beatGain);
+      beatGain.connect(ctx.destination);
+      
+      const start = now + i * 0.25;
+      beat.frequency.setValueAtTime(80, start);
+      beat.frequency.exponentialRampToValueAtTime(60, start + 0.1);
+      beat.type = 'sine';
+      
+      beatGain.gain.setValueAtTime(0.3, start);
+      beatGain.gain.exponentialRampToValueAtTime(0.01, start + 0.15);
+      
+      beat.start(start);
+      beat.stop(start + 0.15);
+    }
+    
+    // Warm harmonics
+    const warm = ctx.createOscillator();
+    const warmGain = ctx.createGain();
+    warm.connect(warmGain);
+    warmGain.connect(ctx.destination);
+    
+    warm.frequency.setValueAtTime(440, now + 0.1);
+    warm.frequency.linearRampToValueAtTime(523, now + 0.4);
+    warm.type = 'sine';
+    
+    warmGain.gain.setValueAtTime(0.01, now + 0.1);
+    warmGain.gain.linearRampToValueAtTime(0.15, now + 0.25);
+    warmGain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+    
+    warm.start(now + 0.1);
+    warm.stop(now + 0.6);
+  }
+
   toggleMute() {
     this.isMuted = !this.isMuted;
     return this.isMuted;

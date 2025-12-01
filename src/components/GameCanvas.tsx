@@ -372,6 +372,20 @@ export const GameCanvas = () => {
           soundEffects.playAnnoying();
         } else if (newScore === 37) {
           soundEffects.playSuck();
+        } else if (newScore === 66) {
+          soundEffects.playLightsaber();
+        } else if (newScore === 73) {
+          soundEffects.playNerdy();
+        } else if (newScore === 19) {
+          soundEffects.playScaryUpbeat();
+        } else if (newScore === 64) {
+          soundEffects.playFiery();
+        } else if (newScore === 52) {
+          soundEffects.playHulk();
+        } else if (newScore === 88) {
+          soundEffects.playSword();
+        } else if (newScore === 143) {
+          soundEffects.playLove();
         } else if ([4, 8, 15, 16, 23].includes(newScore)) {
           soundEffects.playRatchet();
         } else if (newScore === 42) {
