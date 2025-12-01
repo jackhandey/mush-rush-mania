@@ -437,13 +437,14 @@ export const GameCanvas = () => {
       {gameState === 'menu' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-background/80 backdrop-blur-sm">
           <h1 className="text-7xl font-bold text-primary mb-8 tracking-wider">
-            MUSH-RUSH
+            MUSH RUSH MANIA
           </h1>
           
           <div className="mb-8 animate-bounce-slow">
             <Grumblecap isDropping={false} isCrashed={false} />
           </div>
           
+          <p className="text-xl text-muted-foreground mb-2">Tap to Land</p>
           <p className="text-3xl text-foreground font-bold animate-pulse">TAP TO START</p>
         </div>
       )}
