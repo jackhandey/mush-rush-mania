@@ -179,8 +179,9 @@ export const GameCanvas = () => {
 
   const launch = useCallback(() => {
     // Consistent arc throughout game - difficulty comes from pad spacing
+    // Flatter arc: less vertical velocity, lower gravity for longer hang time
     const horizontalVelocity = isMobile ? 85 : 24.14;
-    const verticalVelocity = isMobile ? -19.7 : -17.8;
+    const verticalVelocity = isMobile ? -14 : -17.8;
     
     velocityRef.current = { x: horizontalVelocity, y: verticalVelocity };
     isDroppingRef.current = false;
@@ -321,18 +322,8 @@ export const GameCanvas = () => {
       let newY = mushroomPosRef.current.y + velocity.y * 0.1;
       
       if (!isDropping) {
-        const gravity = isMobile ? 0.27 : 0.65;
+        const gravity = isMobile ? 0.18 : 0.65;
         velocityRef.current = { ...velocity, y: velocity.y + gravity };
-      }
-      
-      // Ceiling constraint - prevent going off top of screen
-      const minY = 5; // Keep mushroom at least 5% from top
-      if (newY < minY) {
-        newY = minY;
-        // Stop upward momentum when hitting ceiling
-        if (velocityRef.current.y < 0) {
-          velocityRef.current = { ...velocityRef.current, y: 0 };
-        }
       }
       
       if (newY > 82 || newY < 0) {
