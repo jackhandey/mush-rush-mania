@@ -321,7 +321,7 @@ export const GameCanvas = () => {
       let newY = mushroomPosRef.current.y + velocity.y * 0.1;
       
       if (!isDropping) {
-        const gravity = isMobile ? 0.32 : 0.65;
+        const gravity = isMobile ? 0.27 : 0.65;
         velocityRef.current = { ...velocity, y: velocity.y + gravity };
       }
       
