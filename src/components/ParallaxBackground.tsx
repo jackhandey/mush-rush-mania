@@ -5,17 +5,6 @@ interface ParallaxBackgroundProps {
   worldSpeed: number;
 }
 
-interface FloatingParticle {
-  id: number;
-  x: number;
-  y: number;
-  size: number;
-  opacity: number;
-  speed: number;
-  drift: number;
-  blinkPhase?: number;
-}
-
 interface FlyingInsect {
   x: number;
   y: number;
@@ -28,50 +17,25 @@ interface FlyingInsect {
 export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackgroundProps) => {
   const isMobile = window.innerWidth <= 768;
   const [tick, setTick] = useState(0);
-  const particlesRef = useRef<FloatingParticle[]>([]);
-  const firefliesRef = useRef<FloatingParticle[]>([]);
   const insectRef = useRef<FlyingInsect>({ x: -20, y: 15, speed: 0.3, wingPhase: 0, size: 1, active: false });
   const lastInsectTime = useRef(0);
   const offsetRef = useRef({ bg: 0, mid: 0, fg: 0, topFg: 0 });
+  const lastFrameTime = useRef(0);
   
-  // Initialize particles (desktop only for performance)
-  useEffect(() => {
-    if (isMobile) return;
-    
-    const spores: FloatingParticle[] = [];
-    for (let i = 0; i < 12; i++) {
-      spores.push({
-        id: i,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: 2 + Math.random() * 3,
-        opacity: 0.3 + Math.random() * 0.4,
-        speed: 0.03 + Math.random() * 0.05,
-        drift: (Math.random() - 0.5) * 0.1,
-      });
-    }
-    particlesRef.current = spores;
-    
-    const flies: FloatingParticle[] = [];
-    for (let i = 0; i < 8; i++) {
-      flies.push({
-        id: i,
-        x: Math.random() * 100,
-        y: 20 + Math.random() * 60,
-        size: 3 + Math.random() * 2,
-        opacity: 0.6 + Math.random() * 0.4,
-        speed: 0.02 + Math.random() * 0.03,
-        drift: (Math.random() - 0.5) * 0.15,
-        blinkPhase: Math.random() * 360,
-      });
-    }
-    firefliesRef.current = flies;
-  }, [isMobile]);
-  
-  // Animation loop - always runs, faster during gameplay
+  // Animation loop - throttled on mobile for performance
   useEffect(() => {
     let animationId: number;
-    const animate = () => {
+    const targetFPS = isMobile ? 30 : 60; // Throttle to 30fps on mobile
+    const frameInterval = 1000 / targetFPS;
+    
+    const animate = (timestamp: number) => {
+      // Throttle frame rate on mobile
+      if (isMobile && timestamp - lastFrameTime.current < frameInterval) {
+        animationId = requestAnimationFrame(animate);
+        return;
+      }
+      lastFrameTime.current = timestamp;
+      
       // Use base speed when not playing, actual speed during gameplay
       const effectiveSpeed = isPlaying ? worldSpeed : 1.5;
       
@@ -87,41 +51,27 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
         topFg: (offsetRef.current.topFg + topFgSpeed) % 150,
       };
       
-      // Update flying insect
-      const now = Date.now();
-      const insect = insectRef.current;
-      if (insect.active) {
-        insect.x += insect.speed;
-        insect.wingPhase = (insect.wingPhase + 15) % 360;
-        if (insect.x > 120) {
-          insect.active = false;
-        }
-      } else if (now - lastInsectTime.current > 8000 + Math.random() * 12000) {
-        // Spawn new insect every 8-20 seconds
-        insectRef.current = {
-          x: -10,
-          y: 8 + Math.random() * 18,
-          speed: 0.15 + Math.random() * 0.2,
-          wingPhase: 0,
-          size: 0.8 + Math.random() * 0.4,
-          active: true,
-        };
-        lastInsectTime.current = now;
-      }
-      
+      // Update flying insect (desktop only for performance)
       if (!isMobile) {
-        particlesRef.current = particlesRef.current.map(p => ({
-          ...p,
-          y: p.y > 105 ? -5 : p.y + p.speed,
-          x: ((p.x + p.drift + 100) % 100),
-        }));
-        
-        firefliesRef.current = firefliesRef.current.map(f => ({
-          ...f,
-          x: ((f.x + f.drift + 100) % 100),
-          y: f.y + Math.sin(Date.now() * 0.001 + f.id) * 0.1,
-          blinkPhase: ((f.blinkPhase || 0) + 3) % 360,
-        }));
+        const now = Date.now();
+        const insect = insectRef.current;
+        if (insect.active) {
+          insect.x += insect.speed;
+          insect.wingPhase = (insect.wingPhase + 15) % 360;
+          if (insect.x > 120) {
+            insect.active = false;
+          }
+        } else if (now - lastInsectTime.current > 8000 + Math.random() * 12000) {
+          insectRef.current = {
+            x: -10,
+            y: 8 + Math.random() * 18,
+            speed: 0.15 + Math.random() * 0.2,
+            wingPhase: 0,
+            size: 0.8 + Math.random() * 0.4,
+            active: true,
+          };
+          lastInsectTime.current = now;
+        }
       }
       
       setTick(t => t + 1);
@@ -131,6 +81,52 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
     animationId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationId);
   }, [isPlaying, worldSpeed, isMobile]);
+  
+  // Mobile: Simplified static background for performance
+  if (isMobile) {
+    return (
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Simple gradient sky */}
+        <div className="absolute inset-0 bg-gradient-to-b from-parallax-sky via-parallax-skyMid to-parallax-skyBottom" />
+        
+        {/* Static moon */}
+        <div 
+          className="absolute w-12 h-12 rounded-full"
+          style={{
+            top: '8%',
+            right: '15%',
+            background: 'radial-gradient(circle at 40% 40%, hsl(var(--moon-glow)), hsl(var(--moon-surface)), hsl(var(--moon-dark)))',
+            boxShadow: '0 0 40px 15px hsl(var(--moon-glow) / 0.3)',
+          }}
+        />
+        
+        {/* Simple scrolling hills */}
+        <svg 
+          className="absolute bottom-0 w-[200%] h-[40%]"
+          style={{ left: `${-offsetRef.current.bg * 0.3}%` }}
+          viewBox="0 0 200 100" 
+          preserveAspectRatio="none"
+        >
+          <path 
+            d="M0,100 L0,60 C30,50 60,65 100,55 C140,45 170,60 200,50 L200,100 Z"
+            fill="hsl(var(--hill-far))"
+          />
+          <path 
+            d="M0,100 L0,70 C25,60 55,75 95,62 C135,50 165,65 200,55 L200,100 Z"
+            fill="hsl(var(--hill-near))"
+          />
+        </svg>
+        
+        {/* Simple fog */}
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-[20%]"
+          style={{
+            background: 'linear-gradient(to top, hsl(var(--fog-color) / 0.3), transparent)',
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -399,42 +395,7 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
         <path d="M70,100 C65,72 75,45 65,15" stroke="hsl(var(--grass-blade))" strokeWidth="3" fill="none" strokeLinecap="round" />
       </svg>
 
-      {/* ========== FLOATING PARTICLES (Desktop only) ========== */}
-      {!isMobile && particlesRef.current.map(p => (
-        <div
-          key={`spore-${p.id}`}
-          className="absolute rounded-full"
-          style={{
-            left: `${p.x}%`,
-            top: `${p.y}%`,
-            width: p.size,
-            height: p.size,
-            background: 'radial-gradient(circle, hsl(var(--spore-glow)), transparent)',
-            boxShadow: `0 0 ${p.size * 2}px hsl(var(--spore-glow) / ${p.opacity})`,
-            opacity: p.opacity,
-          }}
-        />
-      ))}
-      
-      {/* Fireflies (Desktop only) */}
-      {!isMobile && firefliesRef.current.map(f => {
-        const blinkIntensity = Math.max(0, Math.sin((f.blinkPhase || 0) * Math.PI / 180));
-        return (
-          <div
-            key={`firefly-${f.id}`}
-            className="absolute rounded-full"
-            style={{
-              left: `${f.x}%`,
-              top: `${f.y}%`,
-              width: f.size,
-              height: f.size,
-              background: `radial-gradient(circle, hsl(var(--firefly-glow)), transparent)`,
-              boxShadow: `0 0 ${f.size * 3}px hsl(var(--firefly-glow) / ${blinkIntensity * 0.8})`,
-              opacity: f.opacity * blinkIntensity,
-            }}
-          />
-        );
-      })}
+      {/* Particles and fireflies removed for performance */}
 
       {/* ========== ATMOSPHERIC FOG ========== */}
       <div 

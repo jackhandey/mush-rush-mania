@@ -4,10 +4,12 @@ interface GrumblecapProps {
 }
 
 export const Grumblecap = ({ isDropping, isCrashed }: GrumblecapProps) => {
+  const isMobile = window.innerWidth <= 768;
+  
   return (
     <div 
       className={`relative transition-transform ${isCrashed ? 'animate-wiggle' : ''}`}
-      style={{
+      style={isMobile ? undefined : {
         filter: 'drop-shadow(0 0 8px hsl(0 80% 55% / 0.4)) drop-shadow(0 4px 12px hsl(0 0% 0% / 0.5))',
       }}
     >
@@ -42,10 +44,10 @@ export const Grumblecap = ({ isDropping, isCrashed }: GrumblecapProps) => {
         }`}
       />
       
-      {/* Spore cloud on crash */}
+      {/* Spore cloud on crash - simplified on mobile */}
       {isCrashed && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-          <div className="w-16 h-16 bg-destructive rounded-full opacity-50 animate-ping" />
+          <div className={`w-16 h-16 bg-destructive rounded-full opacity-50 ${isMobile ? '' : 'animate-ping'}`} />
         </div>
       )}
     </div>
