@@ -1,0 +1,32 @@
+# Sound files go here
+# Supported formats: .ogg (preferred for low latency), .mp3 (fallback)
+# 
+# Required sound files:
+# - launch.ogg
+# - launch-loud.ogg
+# - boing.ogg
+# - thwack.ogg
+# - crash.ogg
+# - shock.ogg
+# - spaceship.ogg
+# - ghost.ogg
+# - annoying.ogg
+# - suck.ogg
+# - human-sigh.ogg
+# - kids-laugh.ogg
+# - ratchet.ogg
+# - lightsaber.ogg
+# - nerdy.ogg
+# - scary-upbeat.ogg
+# - fiery.ogg
+# - hulk.ogg
+# - sword.ogg
+# - staircase.ogg
+# - love.ogg
+# - record-scratch.ogg
+# - police-siren.ogg
+# - pacman.ogg
+# - pokemon.ogg
+# - punk-guitar.ogg
+# - traffic.ogg
+# - ocean.ogg

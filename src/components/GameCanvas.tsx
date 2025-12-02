@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback, memo } from 'react';
 import { Grumblecap } from './Grumblecap';
 import { ParallaxBackground } from './ParallaxBackground';
 import { toast } from 'sonner';
-import { soundEffects } from '@/utils/soundEffects';
+import { soundManager } from '@/utils/SoundManager';
 import { Volume2, VolumeX } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -43,6 +43,11 @@ export const GameCanvas = () => {
   
   // Mobile detection
   const isMobile = window.innerWidth <= 768;
+
+  // Preload sounds on mount
+  useEffect(() => {
+    soundManager.preload();
+  }, []);
 
   const startGame = useCallback(() => {
     setGameState('playing');
@@ -102,7 +107,7 @@ export const GameCanvas = () => {
     
     velocityRef.current = { x: horizontalVelocity, y: verticalVelocity };
     isDroppingRef.current = false;
-    soundEffects.playLaunch();
+    soundManager.playLaunch();
   }, []);
 
   const handleTap = useCallback(() => {
@@ -119,7 +124,7 @@ export const GameCanvas = () => {
       isDroppingRef.current = true;
       const dropSpeed = isMobile ? 13 : 15;
       velocityRef.current = { x: 0, y: dropSpeed };
-      soundEffects.playThwack();
+      soundManager.playThwack();
       toast('THWACK!', { duration: 500 });
     }
   }, [gameState, startGame]);
@@ -225,7 +230,7 @@ export const GameCanvas = () => {
       if (newY > 82 || newY < 0) {
         setGameState('crashed');
         worldScrollSpeedRef.current = 0;
-        soundEffects.playCrash();
+        soundManager.playCrash();
         toast.error(`Crashed! Score: ${score}`, { duration: 2000 });
         return;
       }
@@ -251,7 +256,7 @@ export const GameCanvas = () => {
       if (landedPad && isDropping) {
         const newScore = score + 1;
         setScore(newScore);
-        soundEffects.playBoing();
+        soundManager.playBoing();
         toast.success('BOING!', { duration: 500 });
         
         // Increase game speed after 24th pad
@@ -268,51 +273,51 @@ export const GameCanvas = () => {
         
         // Easter egg sounds at specific scores
         if (newScore === 451) {
-          soundEffects.playShock();
+          soundManager.playShock();
         } else if (newScore === 47) {
-          soundEffects.playSpaceship();
+          soundManager.playSpaceship();
         } else if (newScore === 217) {
-          soundEffects.playGhost();
+          soundManager.playGhost();
         } else if (newScore === 101) {
-          soundEffects.playAnnoying();
+          soundManager.playAnnoying();
         } else if (newScore === 37) {
-          soundEffects.playSuck();
+          soundManager.playSuck();
         } else if (newScore === 66) {
-          soundEffects.playLightsaber();
+          soundManager.playLightsaber();
         } else if (newScore === 67) {
-          soundEffects.playKidsLaugh();
+          soundManager.playKidsLaugh();
         } else if (newScore === 73) {
-          soundEffects.playNerdy();
+          soundManager.playNerdy();
         } else if (newScore === 19) {
-          soundEffects.playScaryUpbeat();
+          soundManager.playScaryUpbeat();
         } else if (newScore === 64) {
-          soundEffects.playFiery();
+          soundManager.playFiery();
         } else if (newScore === 52) {
-          soundEffects.playHulk();
+          soundManager.playHulk();
         } else if (newScore === 88 || newScore === 300) {
-          soundEffects.playSword();
+          soundManager.playSword();
         } else if (newScore === 142) {
-          soundEffects.playStaircase();
+          soundManager.playStaircase();
         } else if (newScore === 143) {
-          soundEffects.playLove();
+          soundManager.playLove();
         } else if (newScore === 187) {
-          soundEffects.playRecordScratch();
+          soundManager.playRecordScratch();
         } else if (newScore === 209) {
-          soundEffects.playPoliceSiren();
+          soundManager.playPoliceSiren();
         } else if (newScore === 256) {
-          soundEffects.playPacman();
+          soundManager.playPacman();
         } else if (newScore === 151) {
-          soundEffects.playPokemon();
+          soundManager.playPokemon();
         } else if (newScore === 138 || newScore === 182) {
-          soundEffects.playPunkGuitar();
+          soundManager.playPunkGuitar();
         } else if (newScore === 212) {
-          soundEffects.playTraffic();
+          soundManager.playTraffic();
         } else if (newScore === 310) {
-          soundEffects.playOcean();
+          soundManager.playOcean();
         } else if ([4, 8, 15, 16, 23].includes(newScore)) {
-          soundEffects.playRatchet();
+          soundManager.playRatchet();
         } else if (newScore === 42) {
-          soundEffects.playHumanSigh();
+          soundManager.playHumanSigh();
         }
         
         // 113th jump - mushroom spin
@@ -363,7 +368,7 @@ export const GameCanvas = () => {
         
         // 11th jump - louder launch
         if (newScore === 11) {
-          soundEffects.playLaunchLoud();
+          soundManager.playLaunchLoud();
           velocityRef.current = { x: isMobile ? 85 : 24.14, y: isMobile ? -14 : -17.8 };
           isDroppingRef.current = false;
         } else {
@@ -407,16 +412,16 @@ export const GameCanvas = () => {
       />
 
       {/* Score and Mute Button */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 text-6xl font-bold text-foreground z-10 drop-shadow-lg">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 text-6xl font-bold text-foreground z-10 drop-shadow-lg safe-area-top">
         {score}
       </div>
       <button
         onClick={(e) => {
           e.stopPropagation();
-          const newMuted = soundEffects.toggleMute();
+          const newMuted = soundManager.toggleMute();
           setIsMuted(newMuted);
         }}
-        className="absolute top-4 right-4 p-3 bg-background/50 hover:bg-background/70 rounded-full transition-colors z-10 backdrop-blur-sm"
+        className="absolute top-4 right-4 p-3 bg-background/50 hover:bg-background/70 rounded-full transition-colors z-10 backdrop-blur-sm safe-area-top"
       >
         {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
       </button>
