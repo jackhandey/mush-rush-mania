@@ -6,7 +6,8 @@ type SoundName =
   | 'shock' | 'spaceship' | 'ghost' | 'annoying' | 'suck' | 'humanSigh'
   | 'kidsLaugh' | 'ratchet' | 'lightsaber' | 'nerdy' | 'scaryUpbeat'
   | 'fiery' | 'hulk' | 'sword' | 'staircase' | 'love' | 'recordScratch'
-  | 'policeSiren' | 'pacman' | 'pokemon' | 'punkGuitar' | 'traffic' | 'ocean';
+  | 'policeSiren' | 'pacman' | 'pokemon' | 'punkGuitar' | 'traffic' | 'ocean'
+  | 'jetplane';
 
 interface SoundConfig {
   path: string;
@@ -51,6 +52,7 @@ class SoundManager {
     punkGuitar: { path: '/assets/sounds/punk-guitar.ogg', volume: 0.5 },
     traffic: { path: '/assets/sounds/traffic.ogg', volume: 0.5 },
     ocean: { path: '/assets/sounds/ocean.ogg', volume: 0.5 },
+    jetplane: { path: '/assets/sounds/jetplane.mp3', volume: 0.6 },
   };
 
   private getContext(): AudioContext {
@@ -278,6 +280,10 @@ class SoundManager {
 
   playOcean(): void {
     this.play('ocean', () => this.synthOcean());
+  }
+
+  playJetplane(): void {
+    this.play('jetplane', () => this.synthJetplane());
   }
 
   // ========== MUTE CONTROL ==========
@@ -958,6 +964,29 @@ class SoundManager {
     
     osc.start(now);
     osc.stop(now + 1);
+  }
+
+  private synthJetplane(): void {
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    // Rising jet whoosh
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.exponentialRampToValueAtTime(600, now + 0.3);
+    osc.frequency.exponentialRampToValueAtTime(2000, now + 0.6);
+    osc.type = 'sawtooth';
+    
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.linearRampToValueAtTime(0.25, now + 0.2);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
+    
+    osc.start(now);
+    osc.stop(now + 0.7);
   }
 }
 
