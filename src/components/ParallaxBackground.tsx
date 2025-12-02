@@ -66,7 +66,7 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
       const bgSpeed = worldSpeed * 0.02;
       const midSpeed = worldSpeed * 0.05;
       const fgSpeed = worldSpeed * 0.08;
-      const topFgSpeed = worldSpeed * 0.15; // 1.5x faster than main game
+      const topFgSpeed = worldSpeed * 0.25; // Much faster than main game
       
       offsetRef.current = {
         bg: (offsetRef.current.bg + bgSpeed) % 200,
@@ -381,9 +381,9 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
       />
 
       {/* ========== TOP FOREGROUND - Depth of Field Layer (z-50, above player) ========== */}
-      {/* Left side grass & clover cluster */}
+      {/* Left side grass & clover cluster - SHORT, stays below platforms */}
       <svg 
-        className="absolute bottom-0 w-[35%] h-[55%] z-50 pointer-events-none"
+        className="absolute bottom-0 w-[35%] h-[18%] z-50 pointer-events-none"
         style={{ 
           left: `${-8 - (offsetRef.current.topFg % 80)}%`,
           filter: 'blur(4px)',
@@ -391,33 +391,33 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
         viewBox="0 0 100 100" 
         preserveAspectRatio="none"
       >
-        {/* Tall grass blades - organic curves */}
-        <path d="M15,100 C18,70 8,45 20,5" stroke="hsl(var(--fg-silhouette))" strokeWidth="6" fill="none" strokeLinecap="round" />
-        <path d="M30,100 C35,65 22,40 38,0" stroke="hsl(var(--fg-silhouette))" strokeWidth="8" fill="none" strokeLinecap="round" />
-        <path d="M48,100 C42,72 55,48 45,8" stroke="hsl(var(--fg-silhouette))" strokeWidth="5" fill="none" strokeLinecap="round" />
-        <path d="M62,100 C68,68 58,42 72,2" stroke="hsl(var(--fg-silhouette))" strokeWidth="7" fill="none" strokeLinecap="round" />
-        <path d="M78,100 C72,75 82,50 70,12" stroke="hsl(var(--fg-silhouette))" strokeWidth="4" fill="none" strokeLinecap="round" />
+        {/* Short grass blades */}
+        <path d="M15,100 C18,85 12,70 20,50" stroke="hsl(var(--fg-silhouette))" strokeWidth="6" fill="none" strokeLinecap="round" />
+        <path d="M30,100 C35,82 25,65 38,40" stroke="hsl(var(--fg-silhouette))" strokeWidth="8" fill="none" strokeLinecap="round" />
+        <path d="M48,100 C42,88 55,72 45,55" stroke="hsl(var(--fg-silhouette))" strokeWidth="5" fill="none" strokeLinecap="round" />
+        <path d="M62,100 C68,85 58,68 72,45" stroke="hsl(var(--fg-silhouette))" strokeWidth="7" fill="none" strokeLinecap="round" />
+        <path d="M78,100 C72,90 82,75 70,60" stroke="hsl(var(--fg-silhouette))" strokeWidth="4" fill="none" strokeLinecap="round" />
         
-        {/* Clover leaves - three-leaf pattern */}
-        <g transform="translate(25, 75)">
-          <ellipse cx="-6" cy="-3" rx="8" ry="6" fill="hsl(var(--fg-silhouette))" transform="rotate(-30)" />
-          <ellipse cx="6" cy="-3" rx="8" ry="6" fill="hsl(var(--fg-silhouette))" transform="rotate(30)" />
-          <ellipse cx="0" cy="-10" rx="7" ry="6" fill="hsl(var(--fg-silhouette))" />
-          <path d="M0,0 C0,5 0,15 0,25" stroke="hsl(var(--fg-silhouette))" strokeWidth="3" fill="none" />
+        {/* Clover at bottom */}
+        <g transform="translate(25, 88)">
+          <ellipse cx="-5" cy="-2" rx="6" ry="5" fill="hsl(var(--fg-silhouette))" transform="rotate(-30)" />
+          <ellipse cx="5" cy="-2" rx="6" ry="5" fill="hsl(var(--fg-silhouette))" transform="rotate(30)" />
+          <ellipse cx="0" cy="-8" rx="5" ry="5" fill="hsl(var(--fg-silhouette))" />
+          <path d="M0,0 C0,3 0,8 0,12" stroke="hsl(var(--fg-silhouette))" strokeWidth="3" fill="none" />
         </g>
         
         {/* Second clover */}
-        <g transform="translate(70, 82)">
-          <ellipse cx="-5" cy="-2" rx="6" ry="5" fill="hsl(var(--fg-silhouette))" transform="rotate(-35)" />
-          <ellipse cx="5" cy="-2" rx="6" ry="5" fill="hsl(var(--fg-silhouette))" transform="rotate(35)" />
-          <ellipse cx="0" cy="-8" rx="5" ry="5" fill="hsl(var(--fg-silhouette))" />
-          <path d="M0,0 C0,4 0,10 0,18" stroke="hsl(var(--fg-silhouette))" strokeWidth="2" fill="none" />
+        <g transform="translate(70, 92)">
+          <ellipse cx="-4" cy="-2" rx="5" ry="4" fill="hsl(var(--fg-silhouette))" transform="rotate(-35)" />
+          <ellipse cx="4" cy="-2" rx="5" ry="4" fill="hsl(var(--fg-silhouette))" transform="rotate(35)" />
+          <ellipse cx="0" cy="-6" rx="4" ry="4" fill="hsl(var(--fg-silhouette))" />
+          <path d="M0,0 C0,2 0,5 0,8" stroke="hsl(var(--fg-silhouette))" strokeWidth="2" fill="none" />
         </g>
       </svg>
       
       {/* Right side grass & clover cluster */}
       <svg 
-        className="absolute bottom-0 w-[30%] h-[50%] z-50 pointer-events-none"
+        className="absolute bottom-0 w-[30%] h-[15%] z-50 pointer-events-none"
         style={{ 
           right: `${-5 - (offsetRef.current.topFg % 60) * 0.8}%`,
           filter: 'blur(3px)',
@@ -425,25 +425,25 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
         viewBox="0 0 100 100" 
         preserveAspectRatio="none"
       >
-        {/* Grass blades */}
-        <path d="M20,100 C25,68 12,42 28,8" stroke="hsl(var(--fg-silhouette))" strokeWidth="7" fill="none" strokeLinecap="round" />
-        <path d="M40,100 C35,72 48,45 32,5" stroke="hsl(var(--fg-silhouette))" strokeWidth="5" fill="none" strokeLinecap="round" />
-        <path d="M58,100 C65,65 52,38 68,2" stroke="hsl(var(--fg-silhouette))" strokeWidth="8" fill="none" strokeLinecap="round" />
-        <path d="M75,100 C70,70 80,48 68,10" stroke="hsl(var(--fg-silhouette))" strokeWidth="6" fill="none" strokeLinecap="round" />
-        <path d="M88,100 C92,75 82,52 95,15" stroke="hsl(var(--fg-silhouette))" strokeWidth="4" fill="none" strokeLinecap="round" />
+        {/* Short grass blades */}
+        <path d="M20,100 C25,85 15,70 28,50" stroke="hsl(var(--fg-silhouette))" strokeWidth="7" fill="none" strokeLinecap="round" />
+        <path d="M40,100 C35,88 48,72 32,55" stroke="hsl(var(--fg-silhouette))" strokeWidth="5" fill="none" strokeLinecap="round" />
+        <path d="M58,100 C65,82 52,65 68,42" stroke="hsl(var(--fg-silhouette))" strokeWidth="8" fill="none" strokeLinecap="round" />
+        <path d="M75,100 C70,87 80,72 68,58" stroke="hsl(var(--fg-silhouette))" strokeWidth="6" fill="none" strokeLinecap="round" />
+        <path d="M88,100 C92,90 82,78 95,62" stroke="hsl(var(--fg-silhouette))" strokeWidth="4" fill="none" strokeLinecap="round" />
         
         {/* Clover */}
-        <g transform="translate(50, 78)">
-          <ellipse cx="-7" cy="-3" rx="9" ry="7" fill="hsl(var(--fg-silhouette))" transform="rotate(-25)" />
-          <ellipse cx="7" cy="-3" rx="9" ry="7" fill="hsl(var(--fg-silhouette))" transform="rotate(25)" />
-          <ellipse cx="0" cy="-12" rx="8" ry="7" fill="hsl(var(--fg-silhouette))" />
-          <path d="M0,0 C0,6 0,14 0,22" stroke="hsl(var(--fg-silhouette))" strokeWidth="3" fill="none" />
+        <g transform="translate(50, 90)">
+          <ellipse cx="-5" cy="-2" rx="6" ry="5" fill="hsl(var(--fg-silhouette))" transform="rotate(-25)" />
+          <ellipse cx="5" cy="-2" rx="6" ry="5" fill="hsl(var(--fg-silhouette))" transform="rotate(25)" />
+          <ellipse cx="0" cy="-8" rx="5" ry="5" fill="hsl(var(--fg-silhouette))" />
+          <path d="M0,0 C0,3 0,7 0,10" stroke="hsl(var(--fg-silhouette))" strokeWidth="3" fill="none" />
         </g>
       </svg>
       
       {/* Center grass accent */}
       <svg 
-        className="absolute bottom-0 w-[25%] h-[40%] z-50 pointer-events-none"
+        className="absolute bottom-0 w-[25%] h-[12%] z-50 pointer-events-none"
         style={{ 
           left: `${45 - (offsetRef.current.topFg % 100) * 0.5}%`,
           filter: 'blur(5px)',
@@ -452,15 +452,15 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
         viewBox="0 0 100 100" 
         preserveAspectRatio="none"
       >
-        <path d="M30,100 C35,75 25,55 40,20" stroke="hsl(var(--fg-silhouette))" strokeWidth="6" fill="none" strokeLinecap="round" />
-        <path d="M50,100 C45,70 55,45 42,10" stroke="hsl(var(--fg-silhouette))" strokeWidth="8" fill="none" strokeLinecap="round" />
-        <path d="M70,100 C75,72 65,50 78,18" stroke="hsl(var(--fg-silhouette))" strokeWidth="5" fill="none" strokeLinecap="round" />
+        <path d="M30,100 C35,88 25,75 40,55" stroke="hsl(var(--fg-silhouette))" strokeWidth="6" fill="none" strokeLinecap="round" />
+        <path d="M50,100 C45,85 55,70 42,50" stroke="hsl(var(--fg-silhouette))" strokeWidth="8" fill="none" strokeLinecap="round" />
+        <path d="M70,100 C75,90 65,78 78,60" stroke="hsl(var(--fg-silhouette))" strokeWidth="5" fill="none" strokeLinecap="round" />
         
         {/* Small clover */}
-        <g transform="translate(55, 85)">
-          <ellipse cx="-4" cy="-2" rx="5" ry="4" fill="hsl(var(--fg-silhouette))" transform="rotate(-30)" />
-          <ellipse cx="4" cy="-2" rx="5" ry="4" fill="hsl(var(--fg-silhouette))" transform="rotate(30)" />
-          <ellipse cx="0" cy="-7" rx="4" ry="4" fill="hsl(var(--fg-silhouette))" />
+        <g transform="translate(55, 92)">
+          <ellipse cx="-3" cy="-2" rx="4" ry="3" fill="hsl(var(--fg-silhouette))" transform="rotate(-30)" />
+          <ellipse cx="3" cy="-2" rx="4" ry="3" fill="hsl(var(--fg-silhouette))" transform="rotate(30)" />
+          <ellipse cx="0" cy="-5" rx="3" ry="3" fill="hsl(var(--fg-silhouette))" />
         </g>
       </svg>
     </div>
