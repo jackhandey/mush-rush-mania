@@ -130,20 +130,20 @@ export const GameCanvas = () => {
     const gameLoop = () => {
       const worldSpeed = worldScrollSpeedRef.current;
       
-      // Update moss pads
-      mossPadsRef.current = mossPadsRef.current.map(p => {
-        const newAngle = (p.angle + p.speed) % 360;
-        const newBreathPhase = (p.breathPhase + 2) % 360;
-        const baseY = 75;
-        const verticalOffset = Math.sin(newAngle * Math.PI / 180) * 5;
-        return {
-          ...p,
-          x: p.x - worldSpeed * 0.1,
-          y: baseY + verticalOffset,
-          angle: newAngle,
-          breathPhase: newBreathPhase,
-        };
-      }).filter(p => p.x > -20);
+      // Update moss pads - mutate in place for performance
+      const pads = mossPadsRef.current;
+      let validPadCount = 0;
+      for (let i = 0; i < pads.length; i++) {
+        const p = pads[i];
+        p.x -= worldSpeed * 0.1;
+        if (p.x > -20) {
+          p.angle = (p.angle + p.speed) % 360;
+          p.breathPhase = (p.breathPhase + 2) % 360;
+          p.y = 75 + Math.sin(p.angle * Math.PI / 180) * 5;
+          pads[validPadCount++] = p;
+        }
+      }
+      pads.length = validPadCount;
       
       while (mossPadsRef.current.length < 6) {
         const lastX = mossPadsRef.current.length > 0 ? Math.max(...mossPadsRef.current.map(p => p.x)) : 100;
@@ -182,26 +182,33 @@ export const GameCanvas = () => {
         });
       }
       
-      // Update deflating pads
-      mossPadsRef.current = mossPadsRef.current.map(p => {
+      // Update deflating pads - mutate in place
+      let deflateValidCount = 0;
+      for (let i = 0; i < mossPadsRef.current.length; i++) {
+        const p = mossPadsRef.current[i];
         if (p.isDeflating) {
-          const newProgress = p.deflateProgress + 0.08;
-          if (newProgress >= 1) {
-            return null; // Remove fully deflated pads
+          p.deflateProgress += 0.08;
+          if (p.deflateProgress < 1) {
+            mossPadsRef.current[deflateValidCount++] = p;
           }
-          return { ...p, deflateProgress: newProgress };
+        } else {
+          mossPadsRef.current[deflateValidCount++] = p;
         }
-        return p;
-      }).filter((p): p is MossPad => p !== null);
+      }
+      mossPadsRef.current.length = deflateValidCount;
       
-      // Update spore burst - slower fade for visibility
-      if (sporeBurstRef.current.particles.length > 0) {
-        sporeBurstRef.current = {
-          ...sporeBurstRef.current,
-          particles: sporeBurstRef.current.particles
-            .map(p => ({ ...p, distance: p.distance + 1.5, opacity: p.opacity - 0.015 }))
-            .filter(p => p.opacity > 0),
-        };
+      // Update spore burst - mutate in place, skip on mobile
+      if (!isMobile && sporeBurstRef.current.particles.length > 0) {
+        const particles = sporeBurstRef.current.particles;
+        let validCount = 0;
+        for (let i = 0; i < particles.length; i++) {
+          particles[i].distance += 1.5;
+          particles[i].opacity -= 0.015;
+          if (particles[i].opacity > 0) {
+            particles[validCount++] = particles[i];
+          }
+        }
+        particles.length = validCount;
       }
       
       // Update mushroom physics
@@ -310,14 +317,17 @@ export const GameCanvas = () => {
         
         // Deflate the previous pad if it's still visible
         if (lastLandedPadIdRef.current !== null && lastLandedPadIdRef.current !== landedPad.id) {
-          mossPadsRef.current = mossPadsRef.current.map(p => 
-            p.id === lastLandedPadIdRef.current ? { ...p, isDeflating: true } : p
-          );
+          for (let i = 0; i < mossPadsRef.current.length; i++) {
+            if (mossPadsRef.current[i].id === lastLandedPadIdRef.current) {
+              mossPadsRef.current[i].isDeflating = true;
+              break;
+            }
+          }
         }
         lastLandedPadIdRef.current = landedPad.id;
         
-        // Spore burst every 7th jump
-        if (newScore % 7 === 0) {
+        // Spore burst every 7th jump (desktop only)
+        if (!isMobile && newScore % 7 === 0) {
           const burstParticles = [];
           for (let i = 0; i < 16; i++) {
             burstParticles.push({
@@ -329,13 +339,18 @@ export const GameCanvas = () => {
           sporeBurstRef.current = { x: mushroomPosRef.current.x + 4, y: mushroomPosRef.current.y + 4, particles: burstParticles };
         }
         
-        mossPadsRef.current = mossPadsRef.current.map(p => 
-          p === landedPad ? { ...p, glowIntensity: 1 } : p
-        );
+        // Update glow intensity
+        for (let i = 0; i < mossPadsRef.current.length; i++) {
+          if (mossPadsRef.current[i] === landedPad) {
+            mossPadsRef.current[i].glowIntensity = 1;
+          }
+        }
         setTimeout(() => {
-          mossPadsRef.current = mossPadsRef.current.map(p => 
-            p === landedPad ? { ...p, glowIntensity: 0.5 + Math.random() * 0.5 } : p
-          );
+          for (let i = 0; i < mossPadsRef.current.length; i++) {
+            if (mossPadsRef.current[i] === landedPad) {
+              mossPadsRef.current[i].glowIntensity = 0.5 + Math.random() * 0.5;
+            }
+          }
         }, 200);
         
         mushroomPosRef.current = { x: mushroomPosRef.current.x, y: landedPad.y - 5 };
@@ -432,14 +447,49 @@ export const GameCanvas = () => {
             }}
           />
           
-          {/* Floating Logs / Mossy Rocks */}
+          {/* Floating Logs / Mossy Rocks - Simplified on mobile */}
           {mossPadsRef.current.map((pad, i) => {
-            const wobble = Math.sin(pad.breathPhase * Math.PI / 180) * 1.5;
             const deflateScale = pad.isDeflating ? 1 - pad.deflateProgress : 1;
             const deflateOpacity = pad.isDeflating ? 1 - pad.deflateProgress : 1;
             const is27thPad = pad.id === 26;
             const baseOpacity = is27thPad ? 0.35 : 1;
-            // Alternate between log and rock styles
+            
+            // Mobile: Simple static pads for performance
+            if (isMobile) {
+              return (
+                <div
+                  key={`pad-${i}`}
+                  className="absolute z-10"
+                  style={{
+                    left: `${pad.x}%`,
+                    top: `${pad.y}%`,
+                    opacity: deflateOpacity * baseOpacity,
+                    transform: `scale(${deflateScale})`,
+                  }}
+                >
+                  <svg 
+                    style={{
+                      width: `${pad.width}vw`,
+                      height: `${pad.height * 1.2}vh`,
+                    }}
+                    viewBox="0 0 100 40" 
+                    preserveAspectRatio="none"
+                  >
+                    <ellipse cx="50" cy="22" rx="48" ry="16" fill="hsl(var(--log-dark))" />
+                    <ellipse cx="50" cy="20" rx="46" ry="14" fill="hsl(var(--log-color))" />
+                    <ellipse cx="50" cy="12" rx="35" ry="8" fill="hsl(var(--platform-moss))" />
+                  </svg>
+                  {score < 3 && !pad.isDeflating && (
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-foreground whitespace-nowrap bg-background/70 px-2 py-1 rounded z-20 border border-foreground/20">
+                      ↓ LAND HERE
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            
+            // Desktop: Full visual detail
+            const wobble = Math.sin(pad.breathPhase * Math.PI / 180) * 1.5;
             const isLog = pad.id % 2 === 0;
             
             return (
@@ -453,7 +503,6 @@ export const GameCanvas = () => {
                 }}
               >
                 {isLog ? (
-                  /* Floating Log */
                   <svg 
                     className="will-change-transform"
                     style={{
@@ -465,19 +514,15 @@ export const GameCanvas = () => {
                     viewBox="0 0 100 40" 
                     preserveAspectRatio="none"
                   >
-                    {/* Log body - organic curved shape */}
                     <ellipse cx="50" cy="22" rx="48" ry="16" fill="hsl(var(--log-dark))" />
                     <ellipse cx="50" cy="20" rx="46" ry="14" fill="hsl(var(--log-color))" />
-                    {/* Bark texture lines */}
                     <path d="M15,18 Q25,15 35,18" stroke="hsl(var(--log-dark))" strokeWidth="1.5" fill="none" opacity="0.6" />
                     <path d="M55,16 Q70,13 85,17" stroke="hsl(var(--log-dark))" strokeWidth="1.5" fill="none" opacity="0.6" />
-                    {/* Moss patches on top */}
                     <ellipse cx="25" cy="12" rx="12" ry="5" fill="hsl(var(--platform-moss))" opacity="0.8" />
                     <ellipse cx="65" cy="10" rx="15" ry="6" fill="hsl(var(--platform-moss))" opacity="0.9" />
                     <ellipse cx="45" cy="8" rx="8" ry="4" fill="hsl(var(--platform-moss))" opacity="0.7" />
                   </svg>
                 ) : (
-                  /* Mossy Rock */
                   <svg 
                     className="will-change-transform"
                     style={{
@@ -489,7 +534,6 @@ export const GameCanvas = () => {
                     viewBox="0 0 100 45" 
                     preserveAspectRatio="none"
                   >
-                    {/* Rock body - irregular organic shape */}
                     <path 
                       d="M5,35 C8,28 3,22 10,15 C18,8 30,5 50,5 C70,5 82,8 90,15 C97,22 92,28 95,35 C92,40 70,42 50,42 C30,42 8,40 5,35 Z"
                       fill="hsl(var(--rock-dark))"
@@ -498,13 +542,11 @@ export const GameCanvas = () => {
                       d="M8,32 C10,26 6,20 12,14 C20,8 32,6 50,6 C68,6 80,8 88,14 C94,20 90,26 92,32 C88,36 68,38 50,38 C32,38 12,36 8,32 Z"
                       fill="hsl(var(--rock-surface))"
                     />
-                    {/* Moss covering */}
                     <path 
                       d="M15,25 C20,18 35,12 50,10 C65,12 80,18 85,25 C80,22 65,18 50,17 C35,18 20,22 15,25 Z"
                       fill="hsl(var(--platform-moss))"
                       opacity="0.9"
                     />
-                    {/* Additional moss patches */}
                     <ellipse cx="30" cy="15" rx="10" ry="5" fill="hsl(var(--platform-moss))" opacity="0.7" />
                     <ellipse cx="70" cy="14" rx="8" ry="4" fill="hsl(var(--platform-moss))" opacity="0.8" />
                   </svg>
@@ -522,8 +564,8 @@ export const GameCanvas = () => {
 
       {/* Foreground particle effects are now handled by ParallaxBackground */}
 
-      {/* Spore Burst Effect */}
-      {gameState === 'playing' && sporeBurstRef.current.particles.map((p, i) => {
+      {/* Spore Burst Effect (Desktop only) */}
+      {!isMobile && gameState === 'playing' && sporeBurstRef.current.particles.map((p, i) => {
         const x = sporeBurstRef.current.x + Math.cos(p.angle * Math.PI / 180) * p.distance;
         const y = sporeBurstRef.current.y + Math.sin(p.angle * Math.PI / 180) * p.distance;
         return (
@@ -533,8 +575,8 @@ export const GameCanvas = () => {
             style={{
               left: `${x}%`,
               top: `${y}%`,
-              width: isMobile ? '10px' : '8px',
-              height: isMobile ? '10px' : '8px',
+              width: '8px',
+              height: '8px',
               background: 'hsl(var(--primary))',
               boxShadow: '0 0 12px hsl(var(--primary)), 0 0 20px hsl(var(--primary) / 0.5)',
               opacity: p.opacity,
