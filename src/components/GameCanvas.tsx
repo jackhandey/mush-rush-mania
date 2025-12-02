@@ -202,8 +202,8 @@ export const GameCanvas = () => {
       }
       mossPadsRef.current.length = deflateValidCount;
       
-      // Update spore burst - mutate in place, skip on mobile
-      if (!isMobile && sporeBurstRef.current.particles.length > 0) {
+      // Update spore burst - mutate in place
+      if (sporeBurstRef.current.particles.length > 0) {
         const particles = sporeBurstRef.current.particles;
         let validCount = 0;
         for (let i = 0; i < particles.length; i++) {
@@ -337,8 +337,8 @@ export const GameCanvas = () => {
         }
         lastLandedPadIdRef.current = landedPad.id;
         
-        // Spore burst every 7th jump (desktop only)
-        if (!isMobile && newScore % 7 === 0) {
+        // Spore burst every 7th jump
+        if (newScore % 7 === 0) {
           const burstParticles = [];
           for (let i = 0; i < 16; i++) {
             burstParticles.push({
@@ -575,10 +575,11 @@ export const GameCanvas = () => {
 
       {/* Foreground particle effects are now handled by ParallaxBackground */}
 
-      {/* Spore Burst Effect (Desktop only) */}
-      {!isMobile && gameState === 'playing' && sporeBurstRef.current.particles.map((p, i) => {
+      {/* Spore Burst Effect */}
+      {gameState === 'playing' && sporeBurstRef.current.particles.map((p, i) => {
         const x = sporeBurstRef.current.x + Math.cos(p.angle * Math.PI / 180) * p.distance;
         const y = sporeBurstRef.current.y + Math.sin(p.angle * Math.PI / 180) * p.distance;
+        const particleSize = isMobile ? '10px' : '8px';
         return (
           <div
             key={`burst-${i}`}
@@ -586,10 +587,10 @@ export const GameCanvas = () => {
             style={{
               left: `${x}%`,
               top: `${y}%`,
-              width: '8px',
-              height: '8px',
+              width: particleSize,
+              height: particleSize,
               background: 'hsl(var(--primary))',
-              boxShadow: '0 0 12px hsl(var(--primary)), 0 0 20px hsl(var(--primary) / 0.5)',
+              boxShadow: isMobile ? 'none' : '0 0 12px hsl(var(--primary)), 0 0 20px hsl(var(--primary) / 0.5)',
               opacity: p.opacity,
             }}
           />
