@@ -438,7 +438,7 @@ export const GameCanvas = () => {
       {/* Menu Screen */}
       {gameState === 'menu' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-background/70 backdrop-blur-md">
-          <h1 className="text-5xl md:text-7xl font-bold text-primary mb-8 tracking-wider drop-shadow-[0_0_30px_hsl(var(--primary)/0.5)]">
+          <h1 className="text-5xl md:text-7xl font-bold text-primary mb-8 tracking-wider drop-shadow-[0_0_30px_hsl(var(--primary)/0.5)] text-center px-4">
             MUSH RUSH MANIA
           </h1>
           
