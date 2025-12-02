@@ -324,7 +324,7 @@ export const GameCanvas = () => {
         } else if (newScore === 310) {
           soundManager.playOcean();
         } else if ([4, 8, 15, 16, 23].includes(newScore)) {
-          soundManager.playRatchet();
+          soundManager.playJetplane();
         } else if (newScore === 42) {
           soundManager.playHumanSigh();
         }
