@@ -6,15 +6,12 @@ import { soundEffects } from '@/utils/soundEffects';
 import { Volume2, VolumeX } from 'lucide-react';
 import { Button } from './ui/button';
 
-interface GameObject {
+interface MossPad {
+  id: number;
   x: number;
   y: number;
   width: number;
   height: number;
-}
-
-interface MossPad extends GameObject {
-  id: number;
   angle: number;
   speed: number;
   breathPhase: number;
@@ -23,61 +20,29 @@ interface MossPad extends GameObject {
   deflateProgress: number;
 }
 
-interface Particle {
-  x: number;
-  y: number;
-  size: number;
-  opacity: number;
-  speed: number;
-  drift: number;
-}
-
-interface Firefly extends Particle {
-  blinkPhase: number;
-  blinkSpeed: number;
-}
-
-interface Raindrop extends Particle {
-  blur: number;
-}
-
 export const GameCanvas = () => {
   const [gameState, setGameState] = useState<'menu' | 'playing' | 'crashed'>('menu');
   const [score, setScore] = useState(0);
-  const [renderTick, setRenderTick] = useState(0); // Single state to trigger renders
-  const [isSpinning, setIsSpinning] = useState(false); // For 113th jump spin effect
+  const [renderTick, setRenderTick] = useState(0);
+  const [isSpinning, setIsSpinning] = useState(false);
   
   // Use refs for frequently updated values to avoid re-renders
   const mushroomPosRef = useRef({ x: 50, y: 80 });
   const velocityRef = useRef({ x: 0, y: 0 });
   const isDroppingRef = useRef(false);
-  const obstaclesRef = useRef<GameObject[]>([]);
   const mossPadsRef = useRef<MossPad[]>([]);
-  const sporesRef = useRef<Particle[]>([]);
-  const firefliesRef = useRef<Firefly[]>([]);
-  const raindropsRef = useRef<Raindrop[]>([]);
-  const gnatsRef = useRef<Particle[]>([]);
   const sporeBurstRef = useRef<{ x: number; y: number; particles: { angle: number; distance: number; opacity: number }[] }>({ x: 0, y: 0, particles: [] });
   const worldScrollSpeedRef = useRef(0);
   const lastLandedPadIdRef = useRef<number | null>(null);
   const nextPadIdRef = useRef(0);
-  const spinRotationRef = useRef(0);
   
   const [isMuted, setIsMuted] = useState(false);
   const gameLoopRef = useRef<number>();
   const lastTapTime = useRef<number>(0);
+  const frameCount = useRef(0);
   
   // Mobile detection
   const isMobile = window.innerWidth <= 768;
-
-  const checkCollision = useCallback((a: GameObject, b: GameObject) => {
-    return (
-      a.x < b.x + b.width &&
-      a.x + a.width > b.x &&
-      a.y < b.y + b.height &&
-      a.y + a.height > b.y
-    );
-  }, []);
 
   const startGame = useCallback(() => {
     setGameState('playing');
@@ -86,41 +51,27 @@ export const GameCanvas = () => {
     velocityRef.current = { x: 0, y: 0 };
     isDroppingRef.current = false;
     worldScrollSpeedRef.current = isMobile ? 2.2 : 2.5;
-    initializeObstacles();
+    initializePads();
     launch();
   }, []);
 
-  const initializeObstacles = () => {
-    const newObstacles: GameObject[] = [];
+  const initializePads = () => {
     const newMossPads: MossPad[] = [];
     
-    // Create background scenery (roots/leaves) - minimal for performance
-    for (let i = 0; i < 4; i++) {
-      newObstacles.push({
-        x: i * 25,
-        y: 10 + Math.random() * 50,
-        width: 12,
-        height: 6,
-      });
-    }
-    
-    // Create fungal shelves - progressive spacing (easier start, harder later)
     const padWidth = isMobile ? 16 : 9;
     const padHeight = isMobile ? 5 : 3;
     
     // First pad starts AHEAD of mushroom (mushroom at x=50)
     let currentX = isMobile ? 54 : 56;
     for (let i = 0; i < 6; i++) {
-      // Progressive spacing - first few pads are closer, then spread out
       if (i > 0) {
-        const progressFactor = Math.min(i / 4, 1); // Ramps up over first 4 pads
+        const progressFactor = Math.min(i / 4, 1);
         const minSpacing = isMobile ? (18 + progressFactor * 10) : (16 + progressFactor * 8);
         const maxSpacing = isMobile ? (22 + progressFactor * 18) : (20 + progressFactor * 17);
         const spacing = minSpacing + Math.random() * (maxSpacing - minSpacing);
         currentX += spacing;
       }
       
-      // Variable Y position - minimal variance until after pad 7
       const baseY = 75;
       const yVariance = i > 7 ? (isMobile ? 14 : 18) : 4;
       const randomY = baseY + (Math.random() - 0.5) * yVariance;
@@ -140,44 +91,7 @@ export const GameCanvas = () => {
       });
     }
     
-    // Initialize particles - minimal on mobile for Android performance
-    const newSpores: Particle[] = [];
-    const newFireflies: Firefly[] = [];
-    const newRaindrops: Raindrop[] = [];
-    const newGnats: Particle[] = [];
-    
-    if (!isMobile) {
-      // Desktop only particles
-      for (let i = 0; i < 3; i++) {
-        newSpores.push({
-          x: Math.random() * 100,
-          y: Math.random() * 100,
-          size: 1.5,
-          opacity: 0.4,
-          speed: 0.08,
-          drift: Math.random() * 0.4 - 0.2,
-        });
-      }
-      for (let i = 0; i < 2; i++) {
-        newFireflies.push({
-          x: Math.random() * 100,
-          y: Math.random() * 100,
-          size: 3,
-          opacity: 0.6,
-          speed: 0.12,
-          drift: Math.random() * 0.2 - 0.1,
-          blinkPhase: Math.random() * 360,
-          blinkSpeed: 2.5,
-        });
-      }
-    }
-    
-    obstaclesRef.current = newObstacles;
     mossPadsRef.current = newMossPads;
-    sporesRef.current = newSpores;
-    firefliesRef.current = newFireflies;
-    raindropsRef.current = newRaindrops;
-    gnatsRef.current = newGnats;
   };
 
   const launch = useCallback(() => {
@@ -215,17 +129,6 @@ export const GameCanvas = () => {
 
     const gameLoop = () => {
       const worldSpeed = worldScrollSpeedRef.current;
-      // Update obstacles
-      obstaclesRef.current = obstaclesRef.current.map(o => ({ ...o, x: o.x - worldSpeed * 0.1 })).filter(o => o.x > -20);
-      while (obstaclesRef.current.length < 6) {
-        const lastX = obstaclesRef.current.length > 0 ? Math.max(...obstaclesRef.current.map(o => o.x)) : 100;
-        obstaclesRef.current.push({
-          x: lastX + 15,
-          y: 10 + Math.random() * 50,
-          width: 12,
-          height: 6,
-        });
-      }
       
       // Update moss pads
       mossPadsRef.current = mossPadsRef.current.map(p => {
@@ -290,32 +193,6 @@ export const GameCanvas = () => {
         }
         return p;
       }).filter((p): p is MossPad => p !== null);
-      
-      // Update particles (simplified)
-      sporesRef.current = sporesRef.current.map(s => ({
-        ...s,
-        y: s.y > 110 ? -10 : s.y + s.speed,
-        x: s.y > 110 ? Math.random() * 100 : s.x + s.drift,
-      }));
-      
-      firefliesRef.current = firefliesRef.current.map(f => ({
-        ...f,
-        x: f.x > 110 ? -10 : f.x < -10 ? 110 : f.x + f.drift,
-        y: f.y > 110 ? -10 : f.y + f.speed * 0.5,
-        blinkPhase: (f.blinkPhase + f.blinkSpeed) % 360,
-      }));
-      
-      raindropsRef.current = raindropsRef.current.map(r => ({
-        ...r,
-        y: r.y > 110 ? -r.size : r.y + r.speed,
-        x: r.y > 110 ? Math.random() * 100 : r.x,
-      }));
-      
-      gnatsRef.current = gnatsRef.current.map(g => ({
-        ...g,
-        x: g.x > 110 ? -10 : g.x < -10 ? 110 : g.x + g.drift,
-        y: g.y + g.speed * Math.sin(Date.now() * 0.01) * 0.2,
-      }));
       
       // Update spore burst - slower fade for visibility
       if (sporeBurstRef.current.particles.length > 0) {
@@ -428,7 +305,6 @@ export const GameCanvas = () => {
         // 113th jump - mushroom spin
         if (newScore === 113) {
           setIsSpinning(true);
-          spinRotationRef.current = 0;
           setTimeout(() => setIsSpinning(false), 1000);
         }
         

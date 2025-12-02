@@ -16,11 +16,22 @@ interface FloatingParticle {
   blinkPhase?: number;
 }
 
+interface FlyingInsect {
+  x: number;
+  y: number;
+  speed: number;
+  wingPhase: number;
+  size: number;
+  active: boolean;
+}
+
 export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackgroundProps) => {
   const isMobile = window.innerWidth <= 768;
   const [tick, setTick] = useState(0);
   const particlesRef = useRef<FloatingParticle[]>([]);
   const firefliesRef = useRef<FloatingParticle[]>([]);
+  const insectRef = useRef<FlyingInsect>({ x: -20, y: 15, speed: 0.3, wingPhase: 0, size: 1, active: false });
+  const lastInsectTime = useRef(0);
   const offsetRef = useRef({ bg: 0, mid: 0, fg: 0, topFg: 0 });
   
   // Initialize particles (desktop only for performance)
@@ -67,7 +78,7 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
       const bgSpeed = effectiveSpeed * 0.02;
       const midSpeed = effectiveSpeed * 0.05;
       const fgSpeed = effectiveSpeed * 0.08;
-      const topFgSpeed = effectiveSpeed * 0.25; // Much faster than main game
+      const topFgSpeed = effectiveSpeed * 0.25;
       
       offsetRef.current = {
         bg: (offsetRef.current.bg + bgSpeed) % 200,
@@ -75,6 +86,28 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
         fg: (offsetRef.current.fg + fgSpeed) % 200,
         topFg: (offsetRef.current.topFg + topFgSpeed) % 150,
       };
+      
+      // Update flying insect
+      const now = Date.now();
+      const insect = insectRef.current;
+      if (insect.active) {
+        insect.x += insect.speed;
+        insect.wingPhase = (insect.wingPhase + 15) % 360;
+        if (insect.x > 120) {
+          insect.active = false;
+        }
+      } else if (now - lastInsectTime.current > 8000 + Math.random() * 12000) {
+        // Spawn new insect every 8-20 seconds
+        insectRef.current = {
+          x: -10,
+          y: 8 + Math.random() * 18,
+          speed: 0.15 + Math.random() * 0.2,
+          wingPhase: 0,
+          size: 0.8 + Math.random() * 0.4,
+          active: true,
+        };
+        lastInsectTime.current = now;
+      }
       
       if (!isMobile) {
         particlesRef.current = particlesRef.current.map(p => ({
@@ -114,6 +147,36 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
           boxShadow: '0 0 60px 20px hsl(var(--moon-glow) / 0.3), 0 0 120px 40px hsl(var(--moon-glow) / 0.1)',
         }}
       />
+      
+      {/* ========== FLYING INSECT (Background element) ========== */}
+      {insectRef.current.active && (
+        <svg
+          className="absolute z-[1] opacity-60"
+          style={{
+            left: `${insectRef.current.x}%`,
+            top: `${insectRef.current.y}%`,
+            width: `${2 * insectRef.current.size}%`,
+            height: `${1.5 * insectRef.current.size}%`,
+          }}
+          viewBox="0 0 40 30"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          {/* Body */}
+          <ellipse cx="20" cy="15" rx="8" ry="4" fill="hsl(var(--hill-far))" />
+          <ellipse cx="12" cy="15" rx="4" ry="3" fill="hsl(var(--hill-far))" />
+          {/* Wings - animated */}
+          <ellipse 
+            cx="20" cy="15" rx="10" ry="6" 
+            fill="hsl(var(--foreground) / 0.15)"
+            transform={`rotate(${Math.sin(insectRef.current.wingPhase * Math.PI / 180) * 20} 20 15) translate(0 ${Math.sin(insectRef.current.wingPhase * Math.PI / 180) * -3})`}
+          />
+          <ellipse 
+            cx="20" cy="15" rx="8" ry="5" 
+            fill="hsl(var(--foreground) / 0.1)"
+            transform={`rotate(${Math.sin(insectRef.current.wingPhase * Math.PI / 180) * -15} 20 15) translate(0 ${Math.sin(insectRef.current.wingPhase * Math.PI / 180) * 2})`}
+          />
+        </svg>
+      )}
       
       {/* ========== BACKGROUND - Organic Rolling Hills ========== */}
       <svg 
