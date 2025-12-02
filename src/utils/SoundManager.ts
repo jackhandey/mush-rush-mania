@@ -57,6 +57,10 @@ class SoundManager {
     if (!this.audioContext) {
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
+    // Resume AudioContext if suspended (required on mobile after user gesture)
+    if (this.audioContext.state === 'suspended') {
+      this.audioContext.resume();
+    }
     return this.audioContext;
   }
 
@@ -130,6 +134,9 @@ class SoundManager {
   // Play sound with Web Audio fallback
   private play(name: SoundName, fallbackFn?: () => void): void {
     if (this.isMuted) return;
+    
+    // Ensure AudioContext is resumed (required on mobile)
+    this.getContext();
     
     // Try pre-loaded audio first
     if (this.playFromPool(name)) return;
