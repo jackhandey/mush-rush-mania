@@ -33,8 +33,10 @@ export const GameCanvas = () => {
   const mossPadsRef = useRef<MossPad[]>([]);
   const sporeBurstRef = useRef<{ x: number; y: number; particles: { angle: number; distance: number; opacity: number }[] }>({ x: 0, y: 0, particles: [] });
   const worldScrollSpeedRef = useRef(0);
+  const speedBoostMultiplierRef = useRef(1);
   const lastLandedPadIdRef = useRef<number | null>(null);
   const nextPadIdRef = useRef(0);
+  const currentPadNumberRef = useRef(0); // Tracks which pad number the player is on
   
   const [isMuted, setIsMuted] = useState(false);
   const gameLoopRef = useRef<number>();
@@ -56,6 +58,8 @@ export const GameCanvas = () => {
     velocityRef.current = { x: 0, y: 0 };
     isDroppingRef.current = false;
     worldScrollSpeedRef.current = isMobile ? 2.2 : 2.5;
+    speedBoostMultiplierRef.current = 1;
+    currentPadNumberRef.current = 0;
     initializePads();
     launch();
   }, []);
@@ -259,17 +263,22 @@ export const GameCanvas = () => {
         soundManager.playBoing();
         toast.success('BOING!', { duration: 500 });
         
-        // Increase game speed after 24th pad
-        if (newScore > 24) {
-          const baseSpeed = isMobile ? 2.2 : 2.5;
-          const speedIncrease = Math.min((newScore - 24) * 0.02, 1.5); // Cap at +1.5 speed
-          worldScrollSpeedRef.current = baseSpeed + speedIncrease;
+        // Track pad number for visual effects
+        currentPadNumberRef.current = newScore;
+        
+        // Speed boost triggers (permanent multiplier)
+        if (newScore === 33 || newScore === 61 || newScore === 100) {
+          speedBoostMultiplierRef.current *= 1.5;
         }
         
-        // Speed boost triggers
-        if (newScore === 33 || newScore === 61 || newScore === 100) {
-          worldScrollSpeedRef.current *= 1.5;
+        // Increase game speed after 24th pad with sustained multiplier
+        const baseSpeed = isMobile ? 2.2 : 2.5;
+        let progressiveSpeed = baseSpeed;
+        if (newScore > 24) {
+          const speedIncrease = Math.min((newScore - 24) * 0.02, 1.5);
+          progressiveSpeed = baseSpeed + speedIncrease;
         }
+        worldScrollSpeedRef.current = progressiveSpeed * speedBoostMultiplierRef.current;
         
         // Easter egg sounds at specific scores
         if (newScore === 451) {
@@ -459,10 +468,19 @@ export const GameCanvas = () => {
           />
           
           {/* Floating Logs / Mossy Rocks - Simplified on mobile */}
-          {mossPadsRef.current.map((pad, i) => {
+          {(() => {
+            // Find the next target pad (smallest X > mushroom X, not the last landed pad)
+            const mushroomX = mushroomPosRef.current.x;
+            const nextTargetPad = mossPadsRef.current
+              .filter(p => p.x > mushroomX && p.id !== lastLandedPadIdRef.current)
+              .sort((a, b) => a.x - b.x)[0];
+            const nextTargetId = nextTargetPad?.id;
+            
+            return mossPadsRef.current.map((pad, i) => {
             const deflateScale = pad.isDeflating ? 1 - pad.deflateProgress : 1;
             const deflateOpacity = pad.isDeflating ? 1 - pad.deflateProgress : 1;
-            const is27thPad = pad.id === 26;
+            // 27th pad (score 26 -> next pad is 27th) should be faded
+            const is27thPad = score === 26 && pad.id === nextTargetId;
             const baseOpacity = is27thPad ? 0.35 : 1;
             
             // Mobile: Simple static pads for performance
@@ -569,7 +587,7 @@ export const GameCanvas = () => {
                 )}
               </div>
             );
-          })}
+          })})()}
         </>
       )}
 
