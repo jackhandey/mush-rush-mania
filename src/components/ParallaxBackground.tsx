@@ -209,37 +209,6 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
         }}
       />
 
-      {/* ========== GOD RAYS ========== */}
-      <div className="absolute inset-0 overflow-hidden opacity-20 md:opacity-30">
-        <div 
-          className="absolute top-0 w-[30%] h-[70%] origin-top"
-          style={{
-            left: '15%',
-            background: 'linear-gradient(180deg, hsl(var(--god-ray)) 0%, transparent 100%)',
-            clipPath: 'polygon(40% 0%, 60% 0%, 100% 100%, 0% 100%)',
-            transform: 'rotate(-5deg)',
-          }}
-        />
-        <div 
-          className="absolute top-0 w-[25%] h-[60%] origin-top"
-          style={{
-            left: '45%',
-            background: 'linear-gradient(180deg, hsl(var(--god-ray)) 0%, transparent 100%)',
-            clipPath: 'polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%)',
-            transform: 'rotate(3deg)',
-          }}
-        />
-        <div 
-          className="absolute top-0 w-[20%] h-[50%] origin-top"
-          style={{
-            right: '20%',
-            background: 'linear-gradient(180deg, hsl(var(--god-ray)) 0%, transparent 100%)',
-            clipPath: 'polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%)',
-            transform: 'rotate(8deg)',
-          }}
-        />
-      </div>
-
       {/* ========== FOREGROUND LAYER (Fastest) ========== */}
       {/* Blurred grass blades - left */}
       <div 
