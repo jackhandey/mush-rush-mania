@@ -535,7 +535,7 @@ export const GameCanvas = () => {
             <Grumblecap isDropping={false} isCrashed={false} />
           </div>
           
-          <p className="text-lg md:text-xl text-muted-foreground mb-2">tap to land on the moss pads</p>
+          <p className="text-lg md:text-xl text-muted-foreground mb-2">tap to land on the logs</p>
           <p className="text-2xl md:text-3xl text-foreground font-bold animate-pulse">TAP TO START</p>
         </div>
       )}
@@ -556,15 +556,15 @@ export const GameCanvas = () => {
             }}
           />
           
-          {/* Fungal Shelves */}
+          {/* Floating Logs / Mossy Rocks */}
           {mossPadsRef.current.map((pad, i) => {
-            const breathScale = 1 + Math.sin(pad.breathPhase * Math.PI / 180) * 0.05;
-            const glowPulse = Math.sin(pad.breathPhase * Math.PI / 180) * 0.3 + 0.7;
+            const wobble = Math.sin(pad.breathPhase * Math.PI / 180) * 1.5;
             const deflateScale = pad.isDeflating ? 1 - pad.deflateProgress : 1;
             const deflateOpacity = pad.isDeflating ? 1 - pad.deflateProgress : 1;
-            // 27th pad (id 26, 0-indexed) is extra faded
             const is27thPad = pad.id === 26;
             const baseOpacity = is27thPad ? 0.35 : 1;
+            // Alternate between log and rock styles
+            const isLog = pad.id % 2 === 0;
             
             return (
               <div
@@ -572,44 +572,70 @@ export const GameCanvas = () => {
                 className="absolute transition-none z-10"
                 style={{
                   left: `${pad.x}%`,
-                  top: `${pad.y}%`,
+                  top: `${pad.y + wobble * 0.1}%`,
                   opacity: deflateOpacity * baseOpacity,
                 }}
               >
-                <div 
-                  className="relative rounded-full will-change-transform"
-                  style={{
-                    width: `${pad.width}vw`,
-                    height: `${pad.height}vh`,
-                    transform: isMobile 
-                      ? `scale(${deflateScale})` 
-                      : `scale(${breathScale * deflateScale}, ${(1 / breathScale) * deflateScale})`,
-                  }}
-                >
-                  {/* Glow layer - simplified on mobile */}
-                  {!isMobile && (
-                    <div 
-                      className="absolute inset-0 rounded-full blur-md"
-                      style={{
-                        background: `radial-gradient(circle, hsl(var(--fungal-glow)) ${glowPulse * pad.glowIntensity * 100}%, transparent)`,
-                        boxShadow: `0 0 ${20 * pad.glowIntensity * glowPulse}px hsl(var(--fungal-glow))`,
-                      }}
-                    />
-                  )}
-                  {/* Shelf surface */}
-                  <div 
-                    className="absolute inset-0 rounded-full border-2"
+                {isLog ? (
+                  /* Floating Log */
+                  <svg 
+                    className="will-change-transform"
                     style={{
-                      background: isMobile 
-                        ? `hsl(var(--fungal-shelf))` 
-                        : `radial-gradient(ellipse at 50% 30%, hsl(var(--fungal-shelf)), hsl(var(--accent)))`,
-                      borderColor: `hsl(var(--fungal-glow) / 0.5)`,
+                      width: `${pad.width}vw`,
+                      height: `${pad.height * 1.2}vh`,
+                      transform: `scale(${deflateScale}) rotate(${wobble}deg)`,
+                      filter: 'drop-shadow(0 4px 8px hsl(0 0% 0% / 0.5))',
                     }}
-                  />
-                </div>
+                    viewBox="0 0 100 40" 
+                    preserveAspectRatio="none"
+                  >
+                    {/* Log body - organic curved shape */}
+                    <ellipse cx="50" cy="22" rx="48" ry="16" fill="hsl(var(--log-dark))" />
+                    <ellipse cx="50" cy="20" rx="46" ry="14" fill="hsl(var(--log-color))" />
+                    {/* Bark texture lines */}
+                    <path d="M15,18 Q25,15 35,18" stroke="hsl(var(--log-dark))" strokeWidth="1.5" fill="none" opacity="0.6" />
+                    <path d="M55,16 Q70,13 85,17" stroke="hsl(var(--log-dark))" strokeWidth="1.5" fill="none" opacity="0.6" />
+                    {/* Moss patches on top */}
+                    <ellipse cx="25" cy="12" rx="12" ry="5" fill="hsl(var(--platform-moss))" opacity="0.8" />
+                    <ellipse cx="65" cy="10" rx="15" ry="6" fill="hsl(var(--platform-moss))" opacity="0.9" />
+                    <ellipse cx="45" cy="8" rx="8" ry="4" fill="hsl(var(--platform-moss))" opacity="0.7" />
+                  </svg>
+                ) : (
+                  /* Mossy Rock */
+                  <svg 
+                    className="will-change-transform"
+                    style={{
+                      width: `${pad.width}vw`,
+                      height: `${pad.height * 1.3}vh`,
+                      transform: `scale(${deflateScale}) rotate(${wobble * 0.5}deg)`,
+                      filter: 'drop-shadow(0 4px 8px hsl(0 0% 0% / 0.5))',
+                    }}
+                    viewBox="0 0 100 45" 
+                    preserveAspectRatio="none"
+                  >
+                    {/* Rock body - irregular organic shape */}
+                    <path 
+                      d="M5,35 C8,28 3,22 10,15 C18,8 30,5 50,5 C70,5 82,8 90,15 C97,22 92,28 95,35 C92,40 70,42 50,42 C30,42 8,40 5,35 Z"
+                      fill="hsl(var(--rock-dark))"
+                    />
+                    <path 
+                      d="M8,32 C10,26 6,20 12,14 C20,8 32,6 50,6 C68,6 80,8 88,14 C94,20 90,26 92,32 C88,36 68,38 50,38 C32,38 12,36 8,32 Z"
+                      fill="hsl(var(--rock-surface))"
+                    />
+                    {/* Moss covering */}
+                    <path 
+                      d="M15,25 C20,18 35,12 50,10 C65,12 80,18 85,25 C80,22 65,18 50,17 C35,18 20,22 15,25 Z"
+                      fill="hsl(var(--platform-moss))"
+                      opacity="0.9"
+                    />
+                    {/* Additional moss patches */}
+                    <ellipse cx="30" cy="15" rx="10" ry="5" fill="hsl(var(--platform-moss))" opacity="0.7" />
+                    <ellipse cx="70" cy="14" rx="8" ry="4" fill="hsl(var(--platform-moss))" opacity="0.8" />
+                  </svg>
+                )}
                 {score < 3 && !pad.isDeflating && (
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-primary whitespace-nowrap bg-background/80 px-2 py-1 rounded z-20">
-                    LAND HERE
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-foreground whitespace-nowrap bg-background/70 px-2 py-1 rounded z-20 border border-foreground/20">
+                    ↓ LAND HERE
                   </div>
                 )}
               </div>
