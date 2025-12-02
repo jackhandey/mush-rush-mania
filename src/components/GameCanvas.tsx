@@ -239,8 +239,14 @@ export const GameCanvas = () => {
         if (currentPadNumberRef.current === 32 && !usedResurrectionRef.current) {
           usedResurrectionRef.current = true;
           toast.success('RESURRECTED! 🌟', { duration: 1500 });
-          // Place mushroom back in safe position and launch again
-          mushroomPosRef.current = { x: 50, y: 75 };
+          // Find nearest pad ahead and position mushroom above it
+          const pads = mossPadsRef.current;
+          const nearestPad = pads.find(p => p.x > 30) || pads[0];
+          if (nearestPad) {
+            mushroomPosRef.current = { x: nearestPad.x + nearestPad.width / 2 - 4, y: nearestPad.y - 15 };
+          } else {
+            mushroomPosRef.current = { x: 50, y: 60 };
+          }
           velocityRef.current = { x: 0, y: 0 };
           isDroppingRef.current = false;
           launch();
