@@ -335,42 +335,150 @@ class SoundEffects {
     }
   }
 
-  // Sucking sound (37th jump)
+  // Sucking sound (37th jump) - deeper, longer vacuum effect
   playSuck() {
     if (this.isMuted) return;
     
     const ctx = this.getContext();
     const now = ctx.currentTime;
     
-    // Descending vacuum sound
+    // Deep vacuum inhale sound
     const osc = ctx.createOscillator();
     const gainNode = ctx.createGain();
     
     osc.connect(gainNode);
     gainNode.connect(ctx.destination);
     
-    osc.frequency.setValueAtTime(600, now);
-    osc.frequency.exponentialRampToValueAtTime(80, now + 0.3);
+    // Start higher and sweep down slowly for that sucking feel
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(150, now + 0.25);
+    osc.frequency.exponentialRampToValueAtTime(40, now + 0.5);
     osc.type = 'sine';
     
-    gainNode.gain.setValueAtTime(0.3, now);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+    gainNode.gain.setValueAtTime(0.01, now);
+    gainNode.gain.linearRampToValueAtTime(0.35, now + 0.1);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.55);
     
-    // Add noise layer
+    // Add turbulent air layer
     const noise = ctx.createOscillator();
     const noiseGain = ctx.createGain();
     noise.connect(noiseGain);
     noiseGain.connect(ctx.destination);
-    noise.frequency.setValueAtTime(200, now);
-    noise.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+    noise.frequency.setValueAtTime(400, now);
+    noise.frequency.exponentialRampToValueAtTime(60, now + 0.45);
     noise.type = 'triangle';
-    noiseGain.gain.setValueAtTime(0.15, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+    noiseGain.gain.setValueAtTime(0.01, now);
+    noiseGain.gain.linearRampToValueAtTime(0.2, now + 0.08);
+    noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+    
+    // Add whooshing suction layer
+    const whoosh = ctx.createOscillator();
+    const whooshGain = ctx.createGain();
+    whoosh.connect(whooshGain);
+    whooshGain.connect(ctx.destination);
+    whoosh.frequency.setValueAtTime(1200, now);
+    whoosh.frequency.exponentialRampToValueAtTime(100, now + 0.4);
+    whoosh.type = 'sawtooth';
+    whooshGain.gain.setValueAtTime(0.08, now);
+    whooshGain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
     
     osc.start(now);
     noise.start(now);
-    osc.stop(now + 0.35);
-    noise.stop(now + 0.35);
+    whoosh.start(now);
+    osc.stop(now + 0.55);
+    noise.stop(now + 0.5);
+    whoosh.stop(now + 0.45);
+  }
+  
+  // Human sigh sound (42nd jump)
+  playHumanSigh() {
+    if (this.isMuted) return;
+    
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    // Human-like sigh (descending formant)
+    const sigh = ctx.createOscillator();
+    const sighGain = ctx.createGain();
+    sigh.connect(sighGain);
+    sighGain.connect(ctx.destination);
+    
+    sigh.frequency.setValueAtTime(350, now);
+    sigh.frequency.linearRampToValueAtTime(280, now + 0.4);
+    sigh.frequency.linearRampToValueAtTime(180, now + 0.8);
+    sigh.type = 'sine';
+    
+    sighGain.gain.setValueAtTime(0.01, now);
+    sighGain.gain.linearRampToValueAtTime(0.25, now + 0.15);
+    sighGain.gain.linearRampToValueAtTime(0.18, now + 0.5);
+    sighGain.gain.exponentialRampToValueAtTime(0.01, now + 0.9);
+    
+    // Add breathy layer
+    const breath = ctx.createOscillator();
+    const breathGain = ctx.createGain();
+    breath.connect(breathGain);
+    breathGain.connect(ctx.destination);
+    
+    breath.frequency.setValueAtTime(600, now);
+    breath.frequency.linearRampToValueAtTime(400, now + 0.7);
+    breath.type = 'triangle';
+    
+    breathGain.gain.setValueAtTime(0.01, now);
+    breathGain.gain.linearRampToValueAtTime(0.08, now + 0.1);
+    breathGain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+    
+    sigh.start(now);
+    breath.start(now);
+    sigh.stop(now + 0.9);
+    breath.stop(now + 0.8);
+  }
+  
+  // Kids laugh sound (67th jump)
+  playKidsLaugh() {
+    if (this.isMuted) return;
+    
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    // Create bubbly, playful laugh sounds
+    for (let i = 0; i < 4; i++) {
+      const osc = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      osc.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      const startTime = now + i * 0.12;
+      // Alternating pitches for "ha ha ha" effect
+      const basePitch = 500 + (i % 2) * 150;
+      osc.frequency.setValueAtTime(basePitch, startTime);
+      osc.frequency.exponentialRampToValueAtTime(basePitch * 0.7, startTime + 0.1);
+      osc.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.01, startTime);
+      gainNode.gain.linearRampToValueAtTime(0.25, startTime + 0.03);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.1);
+      
+      osc.start(startTime);
+      osc.stop(startTime + 0.11);
+    }
+    
+    // Add higher harmonic for brightness
+    const bright = ctx.createOscillator();
+    const brightGain = ctx.createGain();
+    bright.connect(brightGain);
+    brightGain.connect(ctx.destination);
+    
+    bright.frequency.setValueAtTime(900, now);
+    bright.frequency.linearRampToValueAtTime(700, now + 0.4);
+    bright.type = 'triangle';
+    
+    brightGain.gain.setValueAtTime(0.01, now);
+    brightGain.gain.linearRampToValueAtTime(0.1, now + 0.1);
+    brightGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+    
+    bright.start(now);
+    bright.stop(now + 0.5);
   }
 
   // Positive jet whoosh (LOST numbers: 4, 8, 15, 16, 23, 42)

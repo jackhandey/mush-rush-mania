@@ -261,6 +261,11 @@ export const GameCanvas = () => {
           worldScrollSpeedRef.current = baseSpeed + speedIncrease;
         }
         
+        // Speed boost triggers
+        if (newScore === 33 || newScore === 61 || newScore === 100) {
+          worldScrollSpeedRef.current *= 1.5;
+        }
+        
         // Easter egg sounds at specific scores
         if (newScore === 451) {
           soundEffects.playShock();
@@ -274,6 +279,8 @@ export const GameCanvas = () => {
           soundEffects.playSuck();
         } else if (newScore === 66) {
           soundEffects.playLightsaber();
+        } else if (newScore === 67) {
+          soundEffects.playKidsLaugh();
         } else if (newScore === 73) {
           soundEffects.playNerdy();
         } else if (newScore === 19) {
@@ -305,8 +312,7 @@ export const GameCanvas = () => {
         } else if ([4, 8, 15, 16, 23].includes(newScore)) {
           soundEffects.playRatchet();
         } else if (newScore === 42) {
-          soundEffects.playRatchet();
-          soundEffects.playAirSigh();
+          soundEffects.playHumanSigh();
         }
         
         // 113th jump - mushroom spin
