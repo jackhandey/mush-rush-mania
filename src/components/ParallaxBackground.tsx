@@ -161,7 +161,7 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
     </div>
   );
 
-  // Foreground grass layer 1 - faster
+  // Foreground layer 1 - faster, different shapes (ferns, curly grass, mushroom silhouettes)
   const ForegroundLayer1 = ({ offset }: { offset: number }) => (
     <div 
       className="absolute bottom-0 h-[14%] w-[200%] z-50 pointer-events-none"
@@ -172,26 +172,37 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
       }}
     >
       <svg className="w-full h-full" viewBox="0 0 200 100" preserveAspectRatio="none">
-        <path d="M8,100 C12,80 5,60 15,38" stroke="hsl(var(--fg-silhouette))" strokeWidth="7" fill="none" strokeLinecap="round" />
-        <path d="M28,100 C35,75 22,52 40,28" stroke="hsl(var(--fg-silhouette))" strokeWidth="9" fill="none" strokeLinecap="round" />
-        <path d="M52,100 C45,82 58,62 48,42" stroke="hsl(var(--fg-silhouette))" strokeWidth="6" fill="none" strokeLinecap="round" />
-        <path d="M78,100 C85,78 72,55 92,32" stroke="hsl(var(--fg-silhouette))" strokeWidth="8" fill="none" strokeLinecap="round" />
-        <path d="M105,100 C98,85 112,65 100,45" stroke="hsl(var(--fg-silhouette))" strokeWidth="6" fill="none" strokeLinecap="round" />
-        <path d="M132,100 C140,75 125,52 148,28" stroke="hsl(var(--fg-silhouette))" strokeWidth="9" fill="none" strokeLinecap="round" />
-        <path d="M162,100 C155,82 170,60 158,38" stroke="hsl(var(--fg-silhouette))" strokeWidth="7" fill="none" strokeLinecap="round" />
-        <path d="M188,100 C195,78 182,55 200,32" stroke="hsl(var(--fg-silhouette))" strokeWidth="8" fill="none" strokeLinecap="round" />
+        {/* Curly fern frond 1 */}
+        <path d="M12,100 C15,85 8,70 18,55 C28,40 15,30 25,20" stroke="hsl(var(--fg-silhouette))" strokeWidth="5" fill="none" strokeLinecap="round" />
+        <path d="M18,55 C28,52 32,58 28,65" stroke="hsl(var(--fg-silhouette))" strokeWidth="4" fill="none" strokeLinecap="round" />
+        <path d="M15,70 C5,68 2,75 8,82" stroke="hsl(var(--fg-silhouette))" strokeWidth="4" fill="none" strokeLinecap="round" />
         
-        {/* Clover clusters */}
-        <g transform="translate(42, 88)">
-          <ellipse cx="-4" cy="-2" rx="5" ry="4" fill="hsl(var(--fg-silhouette))" transform="rotate(-30)" />
-          <ellipse cx="4" cy="-2" rx="5" ry="4" fill="hsl(var(--fg-silhouette))" transform="rotate(30)" />
-          <ellipse cx="0" cy="-7" rx="4" ry="4" fill="hsl(var(--fg-silhouette))" />
-        </g>
-        <g transform="translate(118, 90)">
-          <ellipse cx="-3" cy="-2" rx="4" ry="3" fill="hsl(var(--fg-silhouette))" transform="rotate(-35)" />
-          <ellipse cx="3" cy="-2" rx="4" ry="3" fill="hsl(var(--fg-silhouette))" transform="rotate(35)" />
-          <ellipse cx="0" cy="-5" rx="3" ry="3" fill="hsl(var(--fg-silhouette))" />
-        </g>
+        {/* Thin wispy grass */}
+        <path d="M38,100 C42,88 36,75 45,60 C48,55 44,50 48,42" stroke="hsl(var(--fg-silhouette))" strokeWidth="3" fill="none" strokeLinecap="round" />
+        <path d="M45,100 C40,85 48,70 42,55" stroke="hsl(var(--fg-silhouette))" strokeWidth="2" fill="none" strokeLinecap="round" />
+        
+        {/* Small mushroom silhouette */}
+        <ellipse cx="65" cy="92" rx="8" ry="4" fill="hsl(var(--fg-silhouette))" />
+        <path d="M65,92 L65,100" stroke="hsl(var(--fg-silhouette))" strokeWidth="4" fill="none" />
+        
+        {/* Curved leaf blade */}
+        <path d="M85,100 C95,80 80,60 100,40 C105,35 100,30 108,25" stroke="hsl(var(--fg-silhouette))" strokeWidth="6" fill="none" strokeLinecap="round" />
+        
+        {/* Curly fern frond 2 */}
+        <path d="M115,100 C112,82 120,65 110,48 C100,32 115,22 105,12" stroke="hsl(var(--fg-silhouette))" strokeWidth="5" fill="none" strokeLinecap="round" />
+        <path d="M110,48 C98,45 95,52 100,60" stroke="hsl(var(--fg-silhouette))" strokeWidth="4" fill="none" strokeLinecap="round" />
+        <path d="M115,65 C125,62 130,70 125,78" stroke="hsl(var(--fg-silhouette))" strokeWidth="4" fill="none" strokeLinecap="round" />
+        
+        {/* Dandelion puff silhouette */}
+        <circle cx="145" cy="55" r="8" fill="hsl(var(--fg-silhouette))" />
+        <path d="M145,63 L145,100" stroke="hsl(var(--fg-silhouette))" strokeWidth="2" fill="none" />
+        
+        {/* Broad leaf */}
+        <path d="M168,100 C175,85 165,70 180,55 C185,50 175,45 185,38" stroke="hsl(var(--fg-silhouette))" strokeWidth="8" fill="none" strokeLinecap="round" />
+        
+        {/* Small toadstool */}
+        <ellipse cx="195" cy="90" rx="6" ry="3" fill="hsl(var(--fg-silhouette))" />
+        <path d="M195,90 L195,100" stroke="hsl(var(--fg-silhouette))" strokeWidth="3" fill="none" />
       </svg>
     </div>
   );
