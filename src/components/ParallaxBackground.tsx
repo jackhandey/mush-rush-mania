@@ -25,18 +25,16 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
   // Animation loop - throttled on mobile for performance
   useEffect(() => {
     let animationId: number;
-    const targetFPS = isMobile ? 30 : 60; // Throttle to 30fps on mobile
+    const targetFPS = isMobile ? 30 : 60;
     const frameInterval = 1000 / targetFPS;
     
     const animate = (timestamp: number) => {
-      // Throttle frame rate on mobile
       if (isMobile && timestamp - lastFrameTime.current < frameInterval) {
         animationId = requestAnimationFrame(animate);
         return;
       }
       lastFrameTime.current = timestamp;
       
-      // Use base speed when not playing, actual speed during gameplay
       const effectiveSpeed = isPlaying ? worldSpeed : 1.5;
       
       const bgSpeed = effectiveSpeed * 0.02;
@@ -51,27 +49,25 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
         topFg: (offsetRef.current.topFg + topFgSpeed) % 150,
       };
       
-      // Update flying insect (desktop only for performance)
-      if (!isMobile) {
-        const now = Date.now();
-        const insect = insectRef.current;
-        if (insect.active) {
-          insect.x += insect.speed;
-          insect.wingPhase = (insect.wingPhase + 15) % 360;
-          if (insect.x > 120) {
-            insect.active = false;
-          }
-        } else if (now - lastInsectTime.current > 8000 + Math.random() * 12000) {
-          insectRef.current = {
-            x: -10,
-            y: 8 + Math.random() * 18,
-            speed: 0.15 + Math.random() * 0.2,
-            wingPhase: 0,
-            size: 0.8 + Math.random() * 0.4,
-            active: true,
-          };
-          lastInsectTime.current = now;
+      // Update flying insect on all platforms
+      const now = Date.now();
+      const insect = insectRef.current;
+      if (insect.active) {
+        insect.x += insect.speed;
+        insect.wingPhase = (insect.wingPhase + 15) % 360;
+        if (insect.x > 120) {
+          insect.active = false;
         }
+      } else if (now - lastInsectTime.current > (isMobile ? 12000 : 8000) + Math.random() * 12000) {
+        insectRef.current = {
+          x: -10,
+          y: 8 + Math.random() * 18,
+          speed: 0.15 + Math.random() * 0.2,
+          wingPhase: 0,
+          size: 0.8 + Math.random() * 0.4,
+          active: true,
+        };
+        lastInsectTime.current = now;
       }
       
       setTick(t => t + 1);
@@ -82,48 +78,151 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
     return () => cancelAnimationFrame(animationId);
   }, [isPlaying, worldSpeed, isMobile]);
   
-  // Mobile: Simplified static background for performance
+  // Mobile: Optimized but visually rich background
   if (isMobile) {
     return (
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Simple gradient sky */}
+        {/* Sky gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-parallax-sky via-parallax-skyMid to-parallax-skyBottom" />
         
-        {/* Static moon */}
+        {/* Moon */}
         <div 
           className="absolute w-12 h-12 rounded-full"
           style={{
             top: '8%',
             right: '15%',
             background: 'radial-gradient(circle at 40% 40%, hsl(var(--moon-glow)), hsl(var(--moon-surface)), hsl(var(--moon-dark)))',
-            boxShadow: '0 0 40px 15px hsl(var(--moon-glow) / 0.3)',
           }}
         />
         
-        {/* Simple scrolling hills */}
+        {/* Flying Insect */}
+        {insectRef.current.active && (
+          <svg
+            className="absolute z-[1] opacity-50"
+            style={{
+              left: `${insectRef.current.x}%`,
+              top: `${insectRef.current.y}%`,
+              width: `${2.5 * insectRef.current.size}%`,
+              height: `${2 * insectRef.current.size}%`,
+            }}
+            viewBox="0 0 40 30"
+            preserveAspectRatio="xMidYMid meet"
+          >
+            <ellipse cx="20" cy="15" rx="8" ry="4" fill="hsl(var(--hill-far))" />
+            <ellipse cx="12" cy="15" rx="4" ry="3" fill="hsl(var(--hill-far))" />
+            <ellipse 
+              cx="20" cy="15" rx="10" ry="6" 
+              fill="hsl(var(--foreground) / 0.15)"
+              transform={`rotate(${Math.sin(insectRef.current.wingPhase * Math.PI / 180) * 20} 20 15)`}
+            />
+          </svg>
+        )}
+        
+        {/* Rolling hills */}
         <svg 
-          className="absolute bottom-0 w-[200%] h-[40%]"
-          style={{ left: `${-offsetRef.current.bg * 0.3}%` }}
+          className="absolute bottom-0 w-[300%] h-[45%]"
+          style={{ left: `${-100 - offsetRef.current.bg * 0.3}%` }}
+          viewBox="0 0 300 100" 
+          preserveAspectRatio="none"
+        >
+          <path 
+            d="M0,100 L0,60 C20,55 30,65 50,50 C70,35 80,55 100,45 C120,35 140,50 160,40 C180,30 200,45 220,38 C240,30 260,42 280,35 C290,32 295,38 300,35 L300,100 Z"
+            fill="hsl(var(--hill-far))"
+          />
+          <path 
+            d="M0,100 L0,70 C15,65 25,75 45,62 C65,50 85,68 105,55 C125,42 145,60 165,52 C185,44 205,58 225,48 C245,38 265,52 285,45 C295,42 300,48 300,48 L300,100 Z"
+            fill="hsl(var(--hill-near))"
+          />
+        </svg>
+
+        {/* Tree roots - simplified */}
+        <svg 
+          className="absolute bottom-0 w-[250%] h-[50%] opacity-60"
+          style={{ left: `${-50 - offsetRef.current.mid}%` }}
+          viewBox="0 0 250 100" 
+          preserveAspectRatio="none"
+        >
+          <path 
+            d="M20,100 C25,85 15,70 25,55 C35,40 20,30 35,20 C45,12 40,8 50,5 C55,3 52,8 55,15 C58,25 50,35 55,50 C60,65 50,80 60,100"
+            fill="hsl(var(--root-color))"
+          />
+          <path 
+            d="M100,100 C95,80 110,65 100,50 C90,35 105,25 95,15 C88,8 95,5 90,3 C85,1 88,8 85,18 C82,30 92,45 85,60 C78,75 90,90 80,100"
+            fill="hsl(var(--root-color))"
+            opacity="0.9"
+          />
+          <path 
+            d="M150,100 C145,75 165,55 155,35 C148,20 170,10 165,5 C175,8 180,25 175,40 C170,55 185,75 180,100"
+            fill="hsl(var(--root-color))"
+            opacity="0.75"
+          />
+          <path 
+            d="M210,100 C205,85 220,70 210,55 C200,40 225,30 215,18 C230,25 235,45 230,60 C225,75 240,90 235,100"
+            fill="hsl(var(--root-color))"
+            opacity="0.85"
+          />
+        </svg>
+
+        {/* Fern fronds - simplified */}
+        <svg 
+          className="absolute bottom-[5%] w-[200%] h-[45%] opacity-50"
+          style={{ left: `${-30 - offsetRef.current.mid * 0.8}%` }}
           viewBox="0 0 200 100" 
           preserveAspectRatio="none"
         >
           <path 
-            d="M0,100 L0,60 C30,50 60,65 100,55 C140,45 170,60 200,50 L200,100 Z"
-            fill="hsl(var(--hill-far))"
+            d="M30,95 C35,80 25,65 30,50 C35,35 25,25 32,15 C28,25 22,35 25,50 C28,65 20,80 25,95"
+            fill="hsl(var(--fern-dark))"
           />
+          <path d="M32,15 C40,18 45,25 40,32 C35,28 30,22 32,15" fill="hsl(var(--fern-color))" />
+          <path d="M30,25 C22,22 15,28 18,35 C25,32 32,28 30,25" fill="hsl(var(--fern-color))" />
+          <path d="M33,35 C42,32 50,38 45,48 C38,42 32,38 33,35" fill="hsl(var(--fern-color))" />
+          
           <path 
-            d="M0,100 L0,70 C25,60 55,75 95,62 C135,50 165,65 200,55 L200,100 Z"
-            fill="hsl(var(--hill-near))"
+            d="M90,98 C95,82 85,65 92,48 C98,32 88,20 95,10 C90,20 82,32 88,48 C94,65 82,82 88,98"
+            fill="hsl(var(--fern-dark))"
           />
+          <path d="M95,10 C105,15 110,25 102,32 C96,25 92,18 95,10" fill="hsl(var(--fern-color))" />
+          <path d="M92,22 C82,18 72,28 78,38 C86,30 94,25 92,22" fill="hsl(var(--fern-color))" />
+          
+          <path 
+            d="M150,96 C158,78 145,60 155,42 C165,25 150,15 160,8 C152,18 142,30 152,48 C162,65 148,82 155,96"
+            fill="hsl(var(--fern-dark))"
+          />
+          <path d="M160,8 C172,15 175,28 165,35 C158,25 156,15 160,8" fill="hsl(var(--fern-color))" />
         </svg>
-        
-        {/* Simple fog */}
+
+        {/* Fog */}
         <div 
           className="absolute bottom-0 left-0 right-0 h-[20%]"
           style={{
             background: 'linear-gradient(to top, hsl(var(--fog-color) / 0.3), transparent)',
           }}
         />
+        
+        {/* Top foreground grass (no blur on mobile) */}
+        <svg 
+          className="absolute bottom-0 w-[35%] h-[15%] z-50 pointer-events-none opacity-70"
+          style={{ left: `${-8 - (offsetRef.current.topFg % 80)}%` }}
+          viewBox="0 0 100 100" 
+          preserveAspectRatio="none"
+        >
+          <path d="M15,100 C18,85 12,70 20,55" stroke="hsl(var(--fg-silhouette))" strokeWidth="6" fill="none" strokeLinecap="round" />
+          <path d="M30,100 C35,82 25,65 38,45" stroke="hsl(var(--fg-silhouette))" strokeWidth="8" fill="none" strokeLinecap="round" />
+          <path d="M48,100 C42,88 55,72 45,60" stroke="hsl(var(--fg-silhouette))" strokeWidth="5" fill="none" strokeLinecap="round" />
+          <path d="M62,100 C68,85 58,68 72,50" stroke="hsl(var(--fg-silhouette))" strokeWidth="7" fill="none" strokeLinecap="round" />
+        </svg>
+        
+        <svg 
+          className="absolute bottom-0 w-[30%] h-[12%] z-50 pointer-events-none opacity-60"
+          style={{ right: `${-5 - (offsetRef.current.topFg % 60) * 0.8}%` }}
+          viewBox="0 0 100 100" 
+          preserveAspectRatio="none"
+        >
+          <path d="M20,100 C25,85 15,70 28,55" stroke="hsl(var(--fg-silhouette))" strokeWidth="7" fill="none" strokeLinecap="round" />
+          <path d="M40,100 C35,88 48,72 32,60" stroke="hsl(var(--fg-silhouette))" strokeWidth="5" fill="none" strokeLinecap="round" />
+          <path d="M60,100 C55,90 65,78 52,65" stroke="hsl(var(--fg-silhouette))" strokeWidth="6" fill="none" strokeLinecap="round" />
+        </svg>
       </div>
     );
   }
