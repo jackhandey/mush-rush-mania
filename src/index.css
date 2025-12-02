@@ -60,17 +60,21 @@ All colors MUST be HSL.
     --hill-near: 240 25% 8%;
     --tree-silhouette: 240 30% 5%;
     
-    /* Mid-ground elements */
+    /* Mid-ground elements - organic vector style */
     --log-color: 25 25% 12%;
     --log-dark: 25 20% 6%;
     --log-light: 25 15% 18%;
-    --root-color: 30 20% 10%;
-    --rock-moss: 140 30% 15%;
-    --rock-dark: 220 20% 8%;
+    --root-color: 25 30% 8%;
+    --rock-moss: 150 35% 18%;
+    --rock-dark: 220 25% 6%;
+    
+    /* Fern colors - Kurzgesagt style */
+    --fern-color: 145 40% 22%;
+    --fern-dark: 150 35% 12%;
     
     /* Foreground elements */
-    --grass-blade: 140 35% 20%;
-    --vine-color: 160 30% 15%;
+    --grass-blade: 145 40% 25%;
+    --vine-color: 155 35% 18%;
     
     /* Atmospheric effects */
     --god-ray: 45 40% 70%;

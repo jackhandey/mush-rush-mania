@@ -27,7 +27,6 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
   useEffect(() => {
     if (isMobile) return;
     
-    // Floating spores
     const spores: FloatingParticle[] = [];
     for (let i = 0; i < 12; i++) {
       spores.push({
@@ -42,7 +41,6 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
     }
     particlesRef.current = spores;
     
-    // Fireflies
     const flies: FloatingParticle[] = [];
     for (let i = 0; i < 8; i++) {
       flies.push({
@@ -65,7 +63,6 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
     
     let animationId: number;
     const animate = () => {
-      // Parallax scroll speeds
       const bgSpeed = worldSpeed * 0.02;
       const midSpeed = worldSpeed * 0.05;
       const fgSpeed = worldSpeed * 0.08;
@@ -76,7 +73,6 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
         fg: (offsetRef.current.fg + fgSpeed) % 200,
       };
       
-      // Update particles (desktop only)
       if (!isMobile) {
         particlesRef.current = particlesRef.current.map(p => ({
           ...p,
@@ -102,11 +98,10 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {/* ========== BACKGROUND LAYER (Slowest) ========== */}
-      {/* Dark forest silhouette with moon */}
+      {/* ========== BACKGROUND LAYER - Twilight Sky ========== */}
       <div className="absolute inset-0 bg-gradient-to-b from-parallax-sky via-parallax-skyMid to-parallax-skyBottom" />
       
-      {/* Large glowing moon */}
+      {/* Glowing Moon */}
       <div 
         className="absolute w-16 h-16 md:w-24 md:h-24 rounded-full"
         style={{
@@ -117,126 +112,226 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
         }}
       />
       
-      {/* Rolling hills silhouette - far */}
-      <div 
-        className="absolute bottom-[25%] h-[30%] w-[250%]"
-        style={{
-          left: `${-50 - offsetRef.current.bg * 0.3}%`,
-          background: 'hsl(var(--hill-far))',
-          clipPath: 'polygon(0% 100%, 0% 70%, 5% 65%, 12% 72%, 20% 55%, 30% 68%, 40% 50%, 50% 65%, 60% 45%, 70% 60%, 80% 48%, 90% 62%, 100% 52%, 100% 100%)',
-        }}
-      />
-      
-      {/* Rolling hills - near */}
-      <div 
-        className="absolute bottom-[20%] h-[25%] w-[250%]"
-        style={{
-          left: `${-30 - offsetRef.current.bg * 0.5}%`,
-          background: 'hsl(var(--hill-near))',
-          clipPath: 'polygon(0% 100%, 0% 80%, 8% 70%, 15% 78%, 25% 60%, 35% 72%, 45% 55%, 55% 68%, 65% 50%, 75% 65%, 85% 52%, 95% 60%, 100% 55%, 100% 100%)',
-        }}
-      />
-      
-      {/* Tree silhouettes on hills */}
-      <div 
-        className="absolute bottom-[30%] h-[20%] w-[300%] opacity-80"
-        style={{
-          left: `${-80 - offsetRef.current.bg * 0.4}%`,
-        }}
+      {/* ========== BACKGROUND - Organic Rolling Hills ========== */}
+      <svg 
+        className="absolute bottom-0 w-[300%] h-[45%]"
+        style={{ left: `${-100 - offsetRef.current.bg * 0.3}%` }}
+        viewBox="0 0 300 100" 
+        preserveAspectRatio="none"
       >
-        {[0, 15, 35, 55, 70, 90, 110, 130].map((pos, i) => (
-          <div 
-            key={i}
-            className="absolute bottom-0"
-            style={{
-              left: `${pos}%`,
-              width: '8%',
-              height: `${60 + (i % 3) * 20}%`,
-              background: 'hsl(var(--tree-silhouette))',
-              clipPath: 'polygon(50% 0%, 15% 100%, 85% 100%)',
-            }}
-          />
-        ))}
-      </div>
+        {/* Far hills - smooth curves */}
+        <path 
+          d="M0,100 L0,60 
+             C20,55 30,65 50,50 
+             C70,35 80,55 100,45 
+             C120,35 140,50 160,40 
+             C180,30 200,45 220,38 
+             C240,30 260,42 280,35 
+             C290,32 295,38 300,35 
+             L300,100 Z"
+          fill="hsl(var(--hill-far))"
+        />
+        {/* Near hills - overlapping smooth curves */}
+        <path 
+          d="M0,100 L0,70 
+             C15,65 25,75 45,62 
+             C65,50 85,68 105,55 
+             C125,42 145,60 165,52 
+             C185,44 205,58 225,48 
+             C245,38 265,52 285,45 
+             C295,42 300,48 300,48 
+             L300,100 Z"
+          fill="hsl(var(--hill-near))"
+        />
+      </svg>
 
-      {/* ========== MID-GROUND LAYER (Medium Speed) ========== */}
-      {/* Giant hollow log */}
-      <div 
-        className="absolute bottom-[15%] h-[18%] w-[40%] md:w-[30%] rounded-[50%] opacity-70"
-        style={{
-          left: `${80 - offsetRef.current.mid}%`,
-          background: 'linear-gradient(180deg, hsl(var(--log-dark)) 0%, hsl(var(--log-color)) 50%, hsl(var(--log-light)) 100%)',
-          boxShadow: 'inset 0 -10px 30px hsl(var(--log-dark))',
-        }}
-      />
-      
-      {/* Twisted tree roots */}
-      <div 
-        className="absolute bottom-[10%] h-[25%] w-[20%] opacity-60"
-        style={{
-          left: `${120 - offsetRef.current.mid}%`,
-        }}
+      {/* ========== MID-GROUND - Giant Tree Roots ========== */}
+      <svg 
+        className="absolute bottom-0 w-[250%] h-[55%] opacity-70"
+        style={{ left: `${-50 - offsetRef.current.mid}%` }}
+        viewBox="0 0 250 100" 
+        preserveAspectRatio="none"
       >
-        <svg viewBox="0 0 100 100" className="w-full h-full" preserveAspectRatio="none">
-          <path 
-            d="M10,100 Q20,60 35,40 Q50,20 60,30 Q70,40 65,60 Q60,80 70,100" 
-            fill="hsl(var(--root-color))"
-          />
-          <path 
-            d="M30,100 Q40,70 55,50 Q65,35 75,45 Q85,55 80,75 Q75,90 85,100" 
-            fill="hsl(var(--root-color))"
-            opacity="0.8"
-          />
-        </svg>
-      </div>
-      
-      {/* Mossy rock */}
-      <div 
-        className="absolute bottom-[12%] h-[12%] w-[15%] md:w-[10%] opacity-50"
-        style={{
-          left: `${160 - offsetRef.current.mid}%`,
-          background: 'radial-gradient(ellipse at 50% 30%, hsl(var(--rock-moss)), hsl(var(--rock-dark)))',
-          borderRadius: '60% 70% 50% 60%',
-        }}
-      />
-      
-      {/* Second log */}
-      <div 
-        className="absolute bottom-[8%] h-[15%] w-[35%] md:w-[25%] rounded-[40%] opacity-50"
-        style={{
-          left: `${200 - offsetRef.current.mid}%`,
-          background: 'linear-gradient(170deg, hsl(var(--log-color)) 0%, hsl(var(--log-dark)) 100%)',
-        }}
-      />
+        {/* Massive curved root 1 */}
+        <path 
+          d="M20,100 
+             C25,85 15,70 25,55 
+             C35,40 20,30 35,20 
+             C45,12 40,8 50,5
+             C55,3 52,8 55,15
+             C58,25 50,35 55,50
+             C60,65 50,80 60,100"
+          fill="hsl(var(--root-color))"
+        />
+        {/* Root branch */}
+        <path 
+          d="M35,55 
+             C45,50 55,55 60,45 
+             C65,35 75,40 70,55
+             C65,70 75,85 70,100"
+          fill="hsl(var(--root-color))"
+          opacity="0.8"
+        />
+        
+        {/* Massive curved root 2 */}
+        <path 
+          d="M100,100 
+             C95,80 110,65 100,50 
+             C90,35 105,25 95,15 
+             C88,8 95,5 90,3
+             C85,1 88,8 85,18
+             C82,30 92,45 85,60
+             C78,75 90,90 80,100"
+          fill="hsl(var(--root-color))"
+          opacity="0.9"
+        />
+        
+        {/* Giant arching root */}
+        <path 
+          d="M150,100 
+             C145,75 165,55 155,35 
+             C148,20 170,10 165,5
+             C175,8 180,25 175,40
+             C170,55 185,75 180,100"
+          fill="hsl(var(--root-color))"
+          opacity="0.75"
+        />
+        
+        {/* Twisted root cluster */}
+        <path 
+          d="M210,100 
+             C205,85 220,70 210,55 
+             C200,40 225,30 215,18
+             C230,25 235,45 230,60
+             C225,75 240,90 235,100"
+          fill="hsl(var(--root-color))"
+          opacity="0.85"
+        />
+      </svg>
 
-      {/* ========== FOREGROUND LAYER (Fastest) ========== */}
-      {/* Blurred grass blades - left */}
-      <div 
-        className="absolute bottom-0 h-[30%] w-[15%] opacity-40 blur-sm"
-        style={{
-          left: `${-5 - (offsetRef.current.fg % 50)}%`,
-        }}
+      {/* ========== MID-GROUND - Massive Fern Fronds ========== */}
+      <svg 
+        className="absolute bottom-[5%] w-[200%] h-[50%] opacity-60"
+        style={{ left: `${-30 - offsetRef.current.mid * 0.8}%` }}
+        viewBox="0 0 200 100" 
+        preserveAspectRatio="none"
       >
-        <svg viewBox="0 0 100 100" className="w-full h-full" preserveAspectRatio="none">
-          <path d="M20,100 Q25,60 15,20" stroke="hsl(var(--grass-blade))" strokeWidth="3" fill="none" />
-          <path d="M40,100 Q45,50 35,10" stroke="hsl(var(--grass-blade))" strokeWidth="4" fill="none" />
-          <path d="M60,100 Q55,55 65,15" stroke="hsl(var(--grass-blade))" strokeWidth="3" fill="none" />
-          <path d="M80,100 Q85,65 75,25" stroke="hsl(var(--grass-blade))" strokeWidth="2" fill="none" />
-        </svg>
-      </div>
+        {/* Giant fern frond 1 - organic curves */}
+        <path 
+          d="M30,95 
+             C35,80 25,65 30,50 
+             C35,35 25,25 32,15
+             C28,25 22,35 25,50
+             C28,65 20,80 25,95"
+          fill="hsl(var(--fern-dark))"
+        />
+        {/* Fern leaflets - smooth curves */}
+        <path 
+          d="M32,15 C40,18 45,25 40,32 C35,28 30,22 32,15"
+          fill="hsl(var(--fern-color))"
+        />
+        <path 
+          d="M30,25 C22,22 15,28 18,35 C25,32 32,28 30,25"
+          fill="hsl(var(--fern-color))"
+        />
+        <path 
+          d="M33,35 C42,32 50,38 45,48 C38,42 32,38 33,35"
+          fill="hsl(var(--fern-color))"
+        />
+        <path 
+          d="M28,45 C18,42 10,50 15,58 C22,52 28,48 28,45"
+          fill="hsl(var(--fern-color))"
+        />
+        <path 
+          d="M32,55 C42,50 52,58 48,68 C40,62 34,56 32,55"
+          fill="hsl(var(--fern-color))"
+        />
+        <path 
+          d="M26,65 C16,62 8,70 14,80 C22,72 28,66 26,65"
+          fill="hsl(var(--fern-color))"
+        />
+        
+        {/* Giant fern frond 2 */}
+        <path 
+          d="M90,98 
+             C95,82 85,65 92,48 
+             C98,32 88,20 95,10
+             C90,20 82,32 88,48
+             C94,65 82,82 88,98"
+          fill="hsl(var(--fern-dark))"
+        />
+        <path d="M95,10 C105,15 110,25 102,32 C96,25 92,18 95,10" fill="hsl(var(--fern-color))" />
+        <path d="M92,22 C82,18 72,28 78,38 C86,30 94,25 92,22" fill="hsl(var(--fern-color))" />
+        <path d="M96,38 C108,32 118,42 110,55 C100,45 95,40 96,38" fill="hsl(var(--fern-color))" />
+        <path d="M88,52 C75,48 65,60 75,72 C82,62 90,55 88,52" fill="hsl(var(--fern-color))" />
+        
+        {/* Giant fern frond 3 */}
+        <path 
+          d="M150,96 
+             C158,78 145,60 155,42 
+             C165,25 150,15 160,8
+             C152,18 142,30 152,48
+             C162,65 148,82 155,96"
+          fill="hsl(var(--fern-dark))"
+        />
+        <path d="M160,8 C172,15 175,28 165,35 C158,25 156,15 160,8" fill="hsl(var(--fern-color))" />
+        <path d="M155,25 C142,20 132,32 142,45 C150,35 158,28 155,25" fill="hsl(var(--fern-color))" />
+        <path d="M158,48 C172,42 182,55 172,68 C162,58 156,50 158,48" fill="hsl(var(--fern-color))" />
+      </svg>
+
+      {/* ========== MID-GROUND - Mossy Boulders ========== */}
+      <svg 
+        className="absolute bottom-0 w-[180%] h-[25%] opacity-50"
+        style={{ left: `${-20 - offsetRef.current.mid * 0.6}%` }}
+        viewBox="0 0 180 100" 
+        preserveAspectRatio="none"
+      >
+        {/* Organic boulder 1 */}
+        <ellipse cx="40" cy="85" rx="25" ry="15" fill="hsl(var(--rock-dark))" />
+        <ellipse cx="38" cy="82" rx="22" ry="12" fill="hsl(var(--rock-moss))" />
+        
+        {/* Organic boulder 2 */}
+        <ellipse cx="110" cy="88" rx="20" ry="12" fill="hsl(var(--rock-dark))" />
+        <ellipse cx="108" cy="86" rx="17" ry="10" fill="hsl(var(--rock-moss))" />
+        
+        {/* Organic boulder 3 */}
+        <ellipse cx="160" cy="90" rx="18" ry="10" fill="hsl(var(--rock-dark))" />
+        <ellipse cx="158" cy="88" rx="15" ry="8" fill="hsl(var(--rock-moss))" />
+      </svg>
+
+      {/* ========== FOREGROUND - Blurred Fern Fronds ========== */}
+      <svg 
+        className="absolute bottom-0 left-0 w-[20%] h-[45%] opacity-35 blur-[2px]"
+        style={{ left: `${-5 - (offsetRef.current.fg % 30)}%` }}
+        viewBox="0 0 100 100" 
+        preserveAspectRatio="none"
+      >
+        {/* Large foreground fern - very blurred */}
+        <path 
+          d="M50,100 
+             C55,75 40,55 50,35 
+             C60,15 45,5 55,0"
+          stroke="hsl(var(--fern-color))"
+          strokeWidth="8"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <path d="M50,35 C65,30 75,40 65,50" stroke="hsl(var(--fern-color))" strokeWidth="5" fill="none" strokeLinecap="round" />
+        <path d="M50,50 C35,45 25,55 35,65" stroke="hsl(var(--fern-color))" strokeWidth="5" fill="none" strokeLinecap="round" />
+        <path d="M50,65 C68,58 80,68 70,80" stroke="hsl(var(--fern-color))" strokeWidth="4" fill="none" strokeLinecap="round" />
+      </svg>
       
-      {/* Blurred vines - right */}
-      <div 
-        className="absolute top-0 h-[40%] w-[10%] opacity-30 blur-sm"
-        style={{
-          right: `${-3 - (offsetRef.current.fg % 40) * 0.5}%`,
-        }}
+      {/* Foreground grass - soft curves */}
+      <svg 
+        className="absolute bottom-0 right-0 w-[15%] h-[35%] opacity-30 blur-[1px]"
+        style={{ right: `${-3 - (offsetRef.current.fg % 25) * 0.5}%` }}
+        viewBox="0 0 100 100" 
+        preserveAspectRatio="none"
       >
-        <svg viewBox="0 0 100 100" className="w-full h-full" preserveAspectRatio="none">
-          <path d="M30,0 Q40,30 25,60 Q10,90 30,100" stroke="hsl(var(--vine-color))" strokeWidth="4" fill="none" />
-          <path d="M70,0 Q60,40 75,70 Q90,100 70,100" stroke="hsl(var(--vine-color))" strokeWidth="3" fill="none" />
-        </svg>
-      </div>
+        <path d="M20,100 C25,70 15,40 25,10" stroke="hsl(var(--grass-blade))" strokeWidth="4" fill="none" strokeLinecap="round" />
+        <path d="M45,100 C50,65 40,35 55,5" stroke="hsl(var(--grass-blade))" strokeWidth="5" fill="none" strokeLinecap="round" />
+        <path d="M70,100 C65,72 75,45 65,15" stroke="hsl(var(--grass-blade))" strokeWidth="3" fill="none" strokeLinecap="round" />
+      </svg>
 
       {/* ========== FLOATING PARTICLES (Desktop only) ========== */}
       {!isMobile && particlesRef.current.map(p => (
@@ -275,12 +370,11 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
         );
       })}
 
-      {/* ========== ATMOSPHERIC OVERLAY ========== */}
-      {/* Subtle fog at bottom */}
+      {/* ========== ATMOSPHERIC FOG ========== */}
       <div 
-        className="absolute bottom-0 left-0 right-0 h-[20%] pointer-events-none"
+        className="absolute bottom-0 left-0 right-0 h-[25%] pointer-events-none"
         style={{
-          background: 'linear-gradient(to top, hsl(var(--fog-color) / 0.3), transparent)',
+          background: 'linear-gradient(to top, hsl(var(--fog-color) / 0.4), transparent)',
         }}
       />
     </div>
