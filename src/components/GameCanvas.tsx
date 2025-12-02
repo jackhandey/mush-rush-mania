@@ -390,7 +390,7 @@ export const GameCanvas = () => {
 
   return (
     <div 
-      className="relative w-full h-screen overflow-hidden cursor-pointer select-none"
+      className="relative w-full h-screen overflow-hidden cursor-pointer select-none safe-area-container"
       style={{
         background: 'linear-gradient(to bottom, hsl(var(--game-bg-start)), hsl(var(--game-bg-end)))',
       }}
