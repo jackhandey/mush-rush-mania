@@ -57,16 +57,17 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
     firefliesRef.current = flies;
   }, [isMobile]);
   
-  // Animation loop
+  // Animation loop - always runs, faster during gameplay
   useEffect(() => {
-    if (!isPlaying) return;
-    
     let animationId: number;
     const animate = () => {
-      const bgSpeed = worldSpeed * 0.02;
-      const midSpeed = worldSpeed * 0.05;
-      const fgSpeed = worldSpeed * 0.08;
-      const topFgSpeed = worldSpeed * 0.25; // Much faster than main game
+      // Use base speed when not playing, actual speed during gameplay
+      const effectiveSpeed = isPlaying ? worldSpeed : 1.5;
+      
+      const bgSpeed = effectiveSpeed * 0.02;
+      const midSpeed = effectiveSpeed * 0.05;
+      const fgSpeed = effectiveSpeed * 0.08;
+      const topFgSpeed = effectiveSpeed * 0.25; // Much faster than main game
       
       offsetRef.current = {
         bg: (offsetRef.current.bg + bgSpeed) % 200,
