@@ -21,7 +21,7 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
   const [tick, setTick] = useState(0);
   const particlesRef = useRef<FloatingParticle[]>([]);
   const firefliesRef = useRef<FloatingParticle[]>([]);
-  const offsetRef = useRef({ bg: 0, mid: 0, fg: 0 });
+  const offsetRef = useRef({ bg: 0, mid: 0, fg: 0, topFg: 0 });
   
   // Initialize particles (desktop only for performance)
   useEffect(() => {
@@ -66,11 +66,13 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
       const bgSpeed = worldSpeed * 0.02;
       const midSpeed = worldSpeed * 0.05;
       const fgSpeed = worldSpeed * 0.08;
+      const topFgSpeed = worldSpeed * 0.15; // 1.5x faster than main game
       
       offsetRef.current = {
         bg: (offsetRef.current.bg + bgSpeed) % 200,
         mid: (offsetRef.current.mid + midSpeed) % 200,
         fg: (offsetRef.current.fg + fgSpeed) % 200,
+        topFg: (offsetRef.current.topFg + topFgSpeed) % 150,
       };
       
       if (!isMobile) {
@@ -377,6 +379,90 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
           background: 'linear-gradient(to top, hsl(var(--fog-color) / 0.4), transparent)',
         }}
       />
+
+      {/* ========== TOP FOREGROUND - Depth of Field Layer (z-50, above player) ========== */}
+      {/* Left side grass & clover cluster */}
+      <svg 
+        className="absolute bottom-0 w-[35%] h-[55%] z-50 pointer-events-none"
+        style={{ 
+          left: `${-8 - (offsetRef.current.topFg % 80)}%`,
+          filter: 'blur(4px)',
+        }}
+        viewBox="0 0 100 100" 
+        preserveAspectRatio="none"
+      >
+        {/* Tall grass blades - organic curves */}
+        <path d="M15,100 C18,70 8,45 20,5" stroke="hsl(var(--fg-silhouette))" strokeWidth="6" fill="none" strokeLinecap="round" />
+        <path d="M30,100 C35,65 22,40 38,0" stroke="hsl(var(--fg-silhouette))" strokeWidth="8" fill="none" strokeLinecap="round" />
+        <path d="M48,100 C42,72 55,48 45,8" stroke="hsl(var(--fg-silhouette))" strokeWidth="5" fill="none" strokeLinecap="round" />
+        <path d="M62,100 C68,68 58,42 72,2" stroke="hsl(var(--fg-silhouette))" strokeWidth="7" fill="none" strokeLinecap="round" />
+        <path d="M78,100 C72,75 82,50 70,12" stroke="hsl(var(--fg-silhouette))" strokeWidth="4" fill="none" strokeLinecap="round" />
+        
+        {/* Clover leaves - three-leaf pattern */}
+        <g transform="translate(25, 75)">
+          <ellipse cx="-6" cy="-3" rx="8" ry="6" fill="hsl(var(--fg-silhouette))" transform="rotate(-30)" />
+          <ellipse cx="6" cy="-3" rx="8" ry="6" fill="hsl(var(--fg-silhouette))" transform="rotate(30)" />
+          <ellipse cx="0" cy="-10" rx="7" ry="6" fill="hsl(var(--fg-silhouette))" />
+          <path d="M0,0 C0,5 0,15 0,25" stroke="hsl(var(--fg-silhouette))" strokeWidth="3" fill="none" />
+        </g>
+        
+        {/* Second clover */}
+        <g transform="translate(70, 82)">
+          <ellipse cx="-5" cy="-2" rx="6" ry="5" fill="hsl(var(--fg-silhouette))" transform="rotate(-35)" />
+          <ellipse cx="5" cy="-2" rx="6" ry="5" fill="hsl(var(--fg-silhouette))" transform="rotate(35)" />
+          <ellipse cx="0" cy="-8" rx="5" ry="5" fill="hsl(var(--fg-silhouette))" />
+          <path d="M0,0 C0,4 0,10 0,18" stroke="hsl(var(--fg-silhouette))" strokeWidth="2" fill="none" />
+        </g>
+      </svg>
+      
+      {/* Right side grass & clover cluster */}
+      <svg 
+        className="absolute bottom-0 w-[30%] h-[50%] z-50 pointer-events-none"
+        style={{ 
+          right: `${-5 - (offsetRef.current.topFg % 60) * 0.8}%`,
+          filter: 'blur(3px)',
+        }}
+        viewBox="0 0 100 100" 
+        preserveAspectRatio="none"
+      >
+        {/* Grass blades */}
+        <path d="M20,100 C25,68 12,42 28,8" stroke="hsl(var(--fg-silhouette))" strokeWidth="7" fill="none" strokeLinecap="round" />
+        <path d="M40,100 C35,72 48,45 32,5" stroke="hsl(var(--fg-silhouette))" strokeWidth="5" fill="none" strokeLinecap="round" />
+        <path d="M58,100 C65,65 52,38 68,2" stroke="hsl(var(--fg-silhouette))" strokeWidth="8" fill="none" strokeLinecap="round" />
+        <path d="M75,100 C70,70 80,48 68,10" stroke="hsl(var(--fg-silhouette))" strokeWidth="6" fill="none" strokeLinecap="round" />
+        <path d="M88,100 C92,75 82,52 95,15" stroke="hsl(var(--fg-silhouette))" strokeWidth="4" fill="none" strokeLinecap="round" />
+        
+        {/* Clover */}
+        <g transform="translate(50, 78)">
+          <ellipse cx="-7" cy="-3" rx="9" ry="7" fill="hsl(var(--fg-silhouette))" transform="rotate(-25)" />
+          <ellipse cx="7" cy="-3" rx="9" ry="7" fill="hsl(var(--fg-silhouette))" transform="rotate(25)" />
+          <ellipse cx="0" cy="-12" rx="8" ry="7" fill="hsl(var(--fg-silhouette))" />
+          <path d="M0,0 C0,6 0,14 0,22" stroke="hsl(var(--fg-silhouette))" strokeWidth="3" fill="none" />
+        </g>
+      </svg>
+      
+      {/* Center grass accent */}
+      <svg 
+        className="absolute bottom-0 w-[25%] h-[40%] z-50 pointer-events-none"
+        style={{ 
+          left: `${45 - (offsetRef.current.topFg % 100) * 0.5}%`,
+          filter: 'blur(5px)',
+          opacity: 0.7,
+        }}
+        viewBox="0 0 100 100" 
+        preserveAspectRatio="none"
+      >
+        <path d="M30,100 C35,75 25,55 40,20" stroke="hsl(var(--fg-silhouette))" strokeWidth="6" fill="none" strokeLinecap="round" />
+        <path d="M50,100 C45,70 55,45 42,10" stroke="hsl(var(--fg-silhouette))" strokeWidth="8" fill="none" strokeLinecap="round" />
+        <path d="M70,100 C75,72 65,50 78,18" stroke="hsl(var(--fg-silhouette))" strokeWidth="5" fill="none" strokeLinecap="round" />
+        
+        {/* Small clover */}
+        <g transform="translate(55, 85)">
+          <ellipse cx="-4" cy="-2" rx="5" ry="4" fill="hsl(var(--fg-silhouette))" transform="rotate(-30)" />
+          <ellipse cx="4" cy="-2" rx="5" ry="4" fill="hsl(var(--fg-silhouette))" transform="rotate(30)" />
+          <ellipse cx="0" cy="-7" rx="4" ry="4" fill="hsl(var(--fg-silhouette))" />
+        </g>
+      </svg>
     </div>
   );
 });

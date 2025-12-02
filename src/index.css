@@ -75,6 +75,7 @@ All colors MUST be HSL.
     /* Foreground elements */
     --grass-blade: 145 40% 25%;
     --vine-color: 155 35% 18%;
+    --fg-silhouette: 220 30% 5%;
     
     /* Atmospheric effects */
     --god-ray: 45 40% 70%;
