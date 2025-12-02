@@ -267,9 +267,9 @@ export const GameCanvas = () => {
         // Track pad number for visual effects
         currentPadNumberRef.current = newScore;
         
-        // Speed boost triggers (permanent multiplier)
-        if (newScore === 33 || newScore === 61 || newScore === 100) {
-          speedBoostMultiplierRef.current *= 1.5;
+        // Speed boost triggers every 10th pad (permanent multiplier)
+        if (newScore > 0 && newScore % 10 === 0) {
+          speedBoostMultiplierRef.current *= 1.15;
         }
         
         // Increase game speed after 24th pad with sustained multiplier
