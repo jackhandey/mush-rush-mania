@@ -61,21 +61,25 @@ All colors MUST be HSL.
     --tree-silhouette: 240 30% 5%;
     
     /* Mid-ground elements - organic vector style */
-    --log-color: 25 25% 12%;
-    --log-dark: 25 20% 6%;
-    --log-light: 25 15% 18%;
-    --root-color: 25 30% 8%;
+    --log-color: 25 30% 18%;
+    --log-dark: 20 25% 10%;
+    --log-light: 30 20% 25%;
+    --root-color: 260 25% 12%;
     --rock-moss: 150 35% 18%;
-    --rock-dark: 220 25% 6%;
+    --rock-dark: 250 30% 10%;
+    --rock-surface: 240 25% 18%;
     
-    /* Fern colors - Kurzgesagt style */
-    --fern-color: 145 40% 22%;
-    --fern-dark: 150 35% 12%;
+    /* Platform colors - visible but natural */
+    --platform-moss: 140 40% 28%;
     
-    /* Foreground elements */
-    --grass-blade: 145 40% 25%;
-    --vine-color: 155 35% 18%;
-    --fg-silhouette: 220 30% 5%;
+    /* Fern colors - deep blues/purples to blend with night sky */
+    --fern-color: 250 35% 22%;
+    --fern-dark: 260 30% 14%;
+    
+    /* Foreground elements - deep blues/purples */
+    --grass-blade: 255 35% 25%;
+    --vine-color: 260 30% 20%;
+    --fg-silhouette: 250 35% 6%;
     
     /* Atmospheric effects */
     --god-ray: 45 40% 70%;
