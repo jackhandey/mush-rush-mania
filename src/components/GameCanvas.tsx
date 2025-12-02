@@ -235,8 +235,8 @@ export const GameCanvas = () => {
       }
       
       if (newY > 82 || newY < 0) {
-        // Resurrection on 33rd pad miss (score 32 means heading to 33rd)
-        if (score === 32 && !usedResurrectionRef.current) {
+        // Resurrection on 33rd pad miss (currentPadNumber 32 means heading to 33rd)
+        if (currentPadNumberRef.current === 32 && !usedResurrectionRef.current) {
           usedResurrectionRef.current = true;
           toast.success('RESURRECTED! 🌟', { duration: 1500 });
           // Place mushroom back in safe position and launch again
