@@ -119,9 +119,9 @@ export const GameCanvas = () => {
         currentX += spacing;
       }
       
-      // Variable Y position - minimal variance until after pad 13
+      // Variable Y position - minimal variance until after pad 7
       const baseY = 75;
-      const yVariance = i > 13 ? ((isMobile ? 12 : 15) + ((i - 13) * 3)) : 4;
+      const yVariance = i > 7 ? (isMobile ? 14 : 18) : 4;
       const randomY = baseY + (Math.random() - 0.5) * yVariance;
       
       newMossPads.push({
@@ -251,14 +251,14 @@ export const GameCanvas = () => {
       const maxSpacing = isMobile ? (22 + difficultyFactor * 14) : (20 + difficultyFactor * 18);
       const spacing = minSpacing + Math.random() * (maxSpacing - minSpacing);
       const baseY = 75;
-      // Vertical variance kicks in after score > 13, increases at 24, then every 33 pads after
+      // Vertical variance kicks in after score > 7, increases at 24, then every 33 pads after
       let yVariance = 4;
       if (score > 24) {
         const baseVariance = isMobile ? 22 : 28;
         const incrementsAfter24 = Math.floor((score - 24) / 33);
         const additionalVariance = incrementsAfter24 * (isMobile ? 4 : 5);
         yVariance = baseVariance + additionalVariance + (difficultyFactor * 15);
-      } else if (score > 13) {
+      } else if (score > 7) {
         yVariance = (isMobile ? 14 : 18) + (difficultyFactor * 10);
       }
       const randomY = baseY + (Math.random() - 0.5) * yVariance;
@@ -368,6 +368,13 @@ export const GameCanvas = () => {
         setScore(newScore);
         soundEffects.playBoing();
         toast.success('BOING!', { duration: 500 });
+        
+        // Increase game speed after 24th pad
+        if (newScore > 24) {
+          const baseSpeed = isMobile ? 2.2 : 2.5;
+          const speedIncrease = Math.min((newScore - 24) * 0.02, 1.5); // Cap at +1.5 speed
+          worldScrollSpeedRef.current = baseSpeed + speedIncrease;
+        }
         
         // Easter egg sounds at specific scores
         if (newScore === 451) {
