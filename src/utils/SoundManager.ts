@@ -113,22 +113,35 @@ class SoundManager {
 
     const config = this.soundConfigs[name];
     
-    // Find an audio element that's not playing
+    // Find an audio element that's not playing and has valid source
     for (const audio of pool) {
+      // Skip if no valid source or readyState indicates no data
+      if (!audio.src || audio.readyState < 2) continue;
+      
       if (audio.paused || audio.ended) {
         audio.currentTime = 0;
         audio.volume = config.volume;
-        audio.play().catch(() => {}); // Ignore autoplay restrictions
+        const playPromise = audio.play();
+        if (playPromise) {
+          playPromise.catch(() => {}); // Ignore autoplay restrictions
+        }
         return true;
       }
     }
     
-    // All busy, reset first one
+    // Try first one if it has valid source
     const audio = pool[0];
-    audio.currentTime = 0;
-    audio.volume = config.volume;
-    audio.play().catch(() => {});
-    return true;
+    if (audio && audio.src && audio.readyState >= 2) {
+      audio.currentTime = 0;
+      audio.volume = config.volume;
+      const playPromise = audio.play();
+      if (playPromise) {
+        playPromise.catch(() => {});
+      }
+      return true;
+    }
+    
+    return false;
   }
 
   // Play sound with Web Audio fallback
@@ -136,13 +149,21 @@ class SoundManager {
     if (this.isMuted) return;
     
     // Ensure AudioContext is resumed (required on mobile)
-    this.getContext();
+    const ctx = this.getContext();
+    
+    // Resume context on user interaction (critical for Android)
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
     
     // Try pre-loaded audio first
     if (this.playFromPool(name)) return;
     
     // Fall back to Web Audio API synthesis
-    if (fallbackFn) fallbackFn();
+    if (fallbackFn) {
+      console.log(`SoundManager: Using fallback for ${name}`);
+      fallbackFn();
+    }
   }
 
   // ========== PUBLIC PLAY METHODS ==========
