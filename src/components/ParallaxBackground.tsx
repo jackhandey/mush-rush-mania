@@ -161,57 +161,73 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
     </div>
   );
 
-  // Foreground grass silhouettes
-  const ForegroundGrassLayer = ({ offset, side }: { offset: number; side: 'left' | 'right' | 'center' }) => {
-    const positions = {
-      left: { left: `${-offset % 100}%`, width: '200%' },
-      right: { right: `${-offset % 100 * 0.8}%`, width: '200%' },
-      center: { left: `${50 - offset % 100 * 0.5}%`, width: '150%' },
-    };
-    
-    return (
-      <div 
-        className="absolute bottom-0 h-[15%] z-50 pointer-events-none"
-        style={{ 
-          ...positions[side],
-          filter: isMobile ? 'none' : 'blur(4px)',
-          opacity: isMobile ? 0.7 : 0.85,
-        }}
-      >
-        <svg className="w-full h-full" viewBox="0 0 200 100" preserveAspectRatio="none">
-          {/* Grass blades */}
-          <path d="M10,100 C15,82 8,65 18,45" stroke="hsl(var(--fg-silhouette))" strokeWidth="6" fill="none" strokeLinecap="round" />
-          <path d="M25,100 C30,78 20,58 35,35" stroke="hsl(var(--fg-silhouette))" strokeWidth="8" fill="none" strokeLinecap="round" />
-          <path d="M42,100 C38,85 48,68 40,50" stroke="hsl(var(--fg-silhouette))" strokeWidth="5" fill="none" strokeLinecap="round" />
-          <path d="M58,100 C65,82 52,62 68,40" stroke="hsl(var(--fg-silhouette))" strokeWidth="7" fill="none" strokeLinecap="round" />
-          <path d="M75,100 C70,88 80,72 68,55" stroke="hsl(var(--fg-silhouette))" strokeWidth="5" fill="none" strokeLinecap="round" />
-          <path d="M92,100 C98,80 85,60 100,38" stroke="hsl(var(--fg-silhouette))" strokeWidth="6" fill="none" strokeLinecap="round" />
-          <path d="M110,100 C105,85 118,68 108,48" stroke="hsl(var(--fg-silhouette))" strokeWidth="8" fill="none" strokeLinecap="round" />
-          <path d="M128,100 C135,78 122,58 140,35" stroke="hsl(var(--fg-silhouette))" strokeWidth="5" fill="none" strokeLinecap="round" />
-          <path d="M148,100 C142,88 155,70 145,52" stroke="hsl(var(--fg-silhouette))" strokeWidth="7" fill="none" strokeLinecap="round" />
-          <path d="M165,100 C172,82 160,62 178,42" stroke="hsl(var(--fg-silhouette))" strokeWidth="6" fill="none" strokeLinecap="round" />
-          <path d="M185,100 C180,85 192,68 182,50" stroke="hsl(var(--fg-silhouette))" strokeWidth="5" fill="none" strokeLinecap="round" />
-          
-          {/* Clover clusters */}
-          <g transform="translate(35, 88)">
-            <ellipse cx="-4" cy="-2" rx="5" ry="4" fill="hsl(var(--fg-silhouette))" transform="rotate(-30)" />
-            <ellipse cx="4" cy="-2" rx="5" ry="4" fill="hsl(var(--fg-silhouette))" transform="rotate(30)" />
-            <ellipse cx="0" cy="-7" rx="4" ry="4" fill="hsl(var(--fg-silhouette))" />
-          </g>
-          <g transform="translate(95, 90)">
-            <ellipse cx="-3" cy="-2" rx="4" ry="3" fill="hsl(var(--fg-silhouette))" transform="rotate(-35)" />
-            <ellipse cx="3" cy="-2" rx="4" ry="3" fill="hsl(var(--fg-silhouette))" transform="rotate(35)" />
-            <ellipse cx="0" cy="-5" rx="3" ry="3" fill="hsl(var(--fg-silhouette))" />
-          </g>
-          <g transform="translate(155, 88)">
-            <ellipse cx="-4" cy="-2" rx="5" ry="4" fill="hsl(var(--fg-silhouette))" transform="rotate(-25)" />
-            <ellipse cx="4" cy="-2" rx="5" ry="4" fill="hsl(var(--fg-silhouette))" transform="rotate(25)" />
-            <ellipse cx="0" cy="-7" rx="4" ry="4" fill="hsl(var(--fg-silhouette))" />
-          </g>
-        </svg>
-      </div>
-    );
-  };
+  // Foreground grass layer 1 - faster
+  const ForegroundLayer1 = ({ offset }: { offset: number }) => (
+    <div 
+      className="absolute bottom-0 h-[14%] w-[200%] z-50 pointer-events-none"
+      style={{ 
+        left: `${-offset}%`,
+        filter: isMobile ? 'none' : 'blur(3px)',
+        opacity: isMobile ? 0.75 : 0.9,
+      }}
+    >
+      <svg className="w-full h-full" viewBox="0 0 200 100" preserveAspectRatio="none">
+        <path d="M8,100 C12,80 5,60 15,38" stroke="hsl(var(--fg-silhouette))" strokeWidth="7" fill="none" strokeLinecap="round" />
+        <path d="M28,100 C35,75 22,52 40,28" stroke="hsl(var(--fg-silhouette))" strokeWidth="9" fill="none" strokeLinecap="round" />
+        <path d="M52,100 C45,82 58,62 48,42" stroke="hsl(var(--fg-silhouette))" strokeWidth="6" fill="none" strokeLinecap="round" />
+        <path d="M78,100 C85,78 72,55 92,32" stroke="hsl(var(--fg-silhouette))" strokeWidth="8" fill="none" strokeLinecap="round" />
+        <path d="M105,100 C98,85 112,65 100,45" stroke="hsl(var(--fg-silhouette))" strokeWidth="6" fill="none" strokeLinecap="round" />
+        <path d="M132,100 C140,75 125,52 148,28" stroke="hsl(var(--fg-silhouette))" strokeWidth="9" fill="none" strokeLinecap="round" />
+        <path d="M162,100 C155,82 170,60 158,38" stroke="hsl(var(--fg-silhouette))" strokeWidth="7" fill="none" strokeLinecap="round" />
+        <path d="M188,100 C195,78 182,55 200,32" stroke="hsl(var(--fg-silhouette))" strokeWidth="8" fill="none" strokeLinecap="round" />
+        
+        {/* Clover clusters */}
+        <g transform="translate(42, 88)">
+          <ellipse cx="-4" cy="-2" rx="5" ry="4" fill="hsl(var(--fg-silhouette))" transform="rotate(-30)" />
+          <ellipse cx="4" cy="-2" rx="5" ry="4" fill="hsl(var(--fg-silhouette))" transform="rotate(30)" />
+          <ellipse cx="0" cy="-7" rx="4" ry="4" fill="hsl(var(--fg-silhouette))" />
+        </g>
+        <g transform="translate(118, 90)">
+          <ellipse cx="-3" cy="-2" rx="4" ry="3" fill="hsl(var(--fg-silhouette))" transform="rotate(-35)" />
+          <ellipse cx="3" cy="-2" rx="4" ry="3" fill="hsl(var(--fg-silhouette))" transform="rotate(35)" />
+          <ellipse cx="0" cy="-5" rx="3" ry="3" fill="hsl(var(--fg-silhouette))" />
+        </g>
+      </svg>
+    </div>
+  );
+
+  // Foreground grass layer 2 - slower, more blurred (deeper depth of field)
+  const ForegroundLayer2 = ({ offset }: { offset: number }) => (
+    <div 
+      className="absolute bottom-0 h-[18%] w-[200%] z-[49] pointer-events-none"
+      style={{ 
+        left: `${-offset}%`,
+        filter: isMobile ? 'none' : 'blur(6px)',
+        opacity: isMobile ? 0.5 : 0.6,
+      }}
+    >
+      <svg className="w-full h-full" viewBox="0 0 200 100" preserveAspectRatio="none">
+        <path d="M15,100 C22,72 10,48 28,22" stroke="hsl(var(--fg-silhouette))" strokeWidth="10" fill="none" strokeLinecap="round" />
+        <path d="M48,100 C40,78 55,55 42,30" stroke="hsl(var(--fg-silhouette))" strokeWidth="8" fill="none" strokeLinecap="round" />
+        <path d="M82,100 C92,70 75,45 98,18" stroke="hsl(var(--fg-silhouette))" strokeWidth="11" fill="none" strokeLinecap="round" />
+        <path d="M120,100 C110,75 128,50 115,25" stroke="hsl(var(--fg-silhouette))" strokeWidth="9" fill="none" strokeLinecap="round" />
+        <path d="M158,100 C168,72 152,48 175,22" stroke="hsl(var(--fg-silhouette))" strokeWidth="10" fill="none" strokeLinecap="round" />
+        <path d="M192,100 C182,78 198,55 185,30" stroke="hsl(var(--fg-silhouette))" strokeWidth="8" fill="none" strokeLinecap="round" />
+        
+        {/* Larger clover clusters */}
+        <g transform="translate(65, 85)">
+          <ellipse cx="-6" cy="-3" rx="7" ry="5" fill="hsl(var(--fg-silhouette))" transform="rotate(-28)" />
+          <ellipse cx="6" cy="-3" rx="7" ry="5" fill="hsl(var(--fg-silhouette))" transform="rotate(28)" />
+          <ellipse cx="0" cy="-10" rx="6" ry="5" fill="hsl(var(--fg-silhouette))" />
+        </g>
+        <g transform="translate(145, 86)">
+          <ellipse cx="-5" cy="-2" rx="6" ry="4" fill="hsl(var(--fg-silhouette))" transform="rotate(-32)" />
+          <ellipse cx="5" cy="-2" rx="6" ry="4" fill="hsl(var(--fg-silhouette))" transform="rotate(32)" />
+          <ellipse cx="0" cy="-8" rx="5" ry="4" fill="hsl(var(--fg-silhouette))" />
+        </g>
+      </svg>
+    </div>
+  );
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -247,8 +263,9 @@ export const ParallaxBackground = memo(({ isPlaying, worldSpeed }: ParallaxBackg
         }}
       />
       
-      {/* Foreground grass - fastest scroll, above player */}
-      <ForegroundGrassLayer offset={offsetRef.current.topFg} side="left" />
+      {/* Foreground grass layers - two speeds for depth */}
+      <ForegroundLayer2 offset={offsetRef.current.topFg * 0.6} />
+      <ForegroundLayer1 offset={offsetRef.current.topFg} />
     </div>
   );
 });
