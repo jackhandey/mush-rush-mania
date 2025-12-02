@@ -60,6 +60,7 @@ export const GameCanvas = () => {
     worldScrollSpeedRef.current = isMobile ? 2.2 : 2.5;
     speedBoostMultiplierRef.current = 1;
     currentPadNumberRef.current = 0;
+    nextPadIdRef.current = 0; // Reset pad IDs for consistent 27th pad dimming
     initializePads();
     launch();
   }, []);
@@ -324,7 +325,7 @@ export const GameCanvas = () => {
         } else if (newScore === 310) {
           soundManager.playOcean();
         } else if ([4, 8, 15, 16, 23].includes(newScore)) {
-          soundManager.playJetplane();
+          soundManager.playFlightDing();
         } else if (newScore === 42) {
           soundManager.playHumanSigh();
         }
