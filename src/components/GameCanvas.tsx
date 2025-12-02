@@ -468,19 +468,11 @@ export const GameCanvas = () => {
           />
           
           {/* Floating Logs / Mossy Rocks - Simplified on mobile */}
-          {(() => {
-            // Find the next target pad (smallest X > mushroom X, not the last landed pad)
-            const mushroomX = mushroomPosRef.current.x;
-            const nextTargetPad = mossPadsRef.current
-              .filter(p => p.x > mushroomX && p.id !== lastLandedPadIdRef.current)
-              .sort((a, b) => a.x - b.x)[0];
-            const nextTargetId = nextTargetPad?.id;
-            
-            return mossPadsRef.current.map((pad, i) => {
+          {mossPadsRef.current.map((pad, i) => {
             const deflateScale = pad.isDeflating ? 1 - pad.deflateProgress : 1;
             const deflateOpacity = pad.isDeflating ? 1 - pad.deflateProgress : 1;
-            // 27th pad (score 26 -> next pad is 27th) should be faded
-            const is27thPad = score === 26 && pad.id === nextTargetId;
+            // 27th pad ever created is always faded (id 26 = 27th, 0-indexed)
+            const is27thPad = pad.id === 26;
             const baseOpacity = is27thPad ? 0.35 : 1;
             
             // Mobile: Simple static pads for performance
@@ -587,7 +579,7 @@ export const GameCanvas = () => {
                 )}
               </div>
             );
-          })})()}
+          })}
         </>
       )}
 
