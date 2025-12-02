@@ -109,7 +109,7 @@ class SoundManager {
     this.sounds.set(name, pool);
   }
 
-  private playFromPool(name: SoundName): boolean {
+  private playFromPool(name: SoundName, duration?: number): boolean {
     const pool = this.sounds.get(name);
     if (!pool || pool.length === 0) return false;
 
@@ -127,6 +127,13 @@ class SoundManager {
         if (playPromise) {
           playPromise.catch(() => {}); // Ignore autoplay restrictions
         }
+        // Stop after duration if specified
+        if (duration) {
+          setTimeout(() => {
+            audio.pause();
+            audio.currentTime = 0;
+          }, duration * 1000);
+        }
         return true;
       }
     }
@@ -140,6 +147,13 @@ class SoundManager {
       if (playPromise) {
         playPromise.catch(() => {});
       }
+      // Stop after duration if specified
+      if (duration) {
+        setTimeout(() => {
+          audio.pause();
+          audio.currentTime = 0;
+        }, duration * 1000);
+      }
       return true;
     }
     
@@ -147,7 +161,7 @@ class SoundManager {
   }
 
   // Play sound with Web Audio fallback
-  private play(name: SoundName, fallbackFn?: () => void): void {
+  private play(name: SoundName, fallbackFn?: () => void, duration?: number): void {
     if (this.isMuted) return;
     
     // Ensure AudioContext is resumed (required on mobile)
@@ -159,7 +173,7 @@ class SoundManager {
     }
     
     // Try pre-loaded audio first
-    if (this.playFromPool(name)) return;
+    if (this.playFromPool(name, duration)) return;
     
     // Fall back to Web Audio API synthesis
     if (fallbackFn) {
@@ -283,7 +297,7 @@ class SoundManager {
   }
 
   playJetplane(): void {
-    this.play('jetplane', () => this.synthJetplane());
+    this.play('jetplane', () => this.synthJetplane(), 0.5);
   }
 
   // ========== MUTE CONTROL ==========
