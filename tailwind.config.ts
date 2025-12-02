@@ -55,6 +55,11 @@ export default {
           bgStart: "hsl(var(--game-bg-start))",
           bgEnd: "hsl(var(--game-bg-end))",
         },
+        parallax: {
+          sky: "hsl(var(--parallax-sky))",
+          skyMid: "hsl(var(--parallax-sky-mid))",
+          skyBottom: "hsl(var(--parallax-sky-bottom))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

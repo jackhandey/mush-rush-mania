@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback, memo } from 'react';
 import { Grumblecap } from './Grumblecap';
+import { ParallaxBackground } from './ParallaxBackground';
 import { toast } from 'sonner';
 import { soundEffects } from '@/utils/soundEffects';
 import { Volume2, VolumeX } from 'lucide-react';
@@ -492,15 +493,24 @@ export const GameCanvas = () => {
 
   return (
     <div 
-      className="relative w-full h-screen bg-gradient-to-b from-game-bgStart to-game-bgEnd overflow-hidden cursor-pointer select-none"
+      className="relative w-full h-screen overflow-hidden cursor-pointer select-none"
+      style={{
+        background: 'linear-gradient(to bottom, hsl(var(--game-bg-start)), hsl(var(--game-bg-end)))',
+      }}
       onClick={handleTap}
       onTouchStart={(e) => {
         e.preventDefault();
         handleTap();
       }}
     >
+      {/* Parallax Background System */}
+      <ParallaxBackground 
+        isPlaying={gameState === 'playing'} 
+        worldSpeed={worldScrollSpeedRef.current || (isMobile ? 2.2 : 2.5)} 
+      />
+
       {/* Score and Mute Button */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 text-6xl font-bold text-foreground z-10">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 text-6xl font-bold text-foreground z-10 drop-shadow-lg">
         {score}
       </div>
       <button
@@ -509,15 +519,15 @@ export const GameCanvas = () => {
           const newMuted = soundEffects.toggleMute();
           setIsMuted(newMuted);
         }}
-        className="absolute top-4 right-4 p-3 bg-background/50 hover:bg-background/70 rounded-full transition-colors z-10"
+        className="absolute top-4 right-4 p-3 bg-background/50 hover:bg-background/70 rounded-full transition-colors z-10 backdrop-blur-sm"
       >
         {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
       </button>
       
       {/* Menu Screen */}
       {gameState === 'menu' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-background/80 backdrop-blur-sm">
-          <h1 className="text-7xl font-bold text-primary mb-8 tracking-wider">
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-background/70 backdrop-blur-md">
+          <h1 className="text-5xl md:text-7xl font-bold text-primary mb-8 tracking-wider drop-shadow-[0_0_30px_hsl(var(--primary)/0.5)]">
             MUSH RUSH MANIA
           </h1>
           
@@ -525,59 +535,10 @@ export const GameCanvas = () => {
             <Grumblecap isDropping={false} isCrashed={false} />
           </div>
           
-          <p className="text-xl text-muted-foreground mb-2">tap to land on the moss pads</p>
-          <p className="text-3xl text-foreground font-bold animate-pulse">TAP TO START</p>
+          <p className="text-lg md:text-xl text-muted-foreground mb-2">tap to land on the moss pads</p>
+          <p className="text-2xl md:text-3xl text-foreground font-bold animate-pulse">TAP TO START</p>
         </div>
       )}
-
-      {/* Lightweight Atmospheric Background - CSS only, no JS particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Soft ambient glow spots */}
-        <div className="absolute top-[15%] left-[10%] w-32 h-32 rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute top-[60%] right-[15%] w-40 h-40 rounded-full bg-accent/8 blur-3xl" />
-        <div className="absolute bottom-[20%] left-[25%] w-24 h-24 rounded-full bg-primary/4 blur-2xl" />
-        {/* Subtle vertical light rays */}
-        <div className="absolute top-0 left-[20%] w-px h-[40%] bg-gradient-to-b from-foreground/5 to-transparent" />
-        <div className="absolute top-0 right-[35%] w-px h-[30%] bg-gradient-to-b from-foreground/3 to-transparent" />
-      </div>
-
-      {/* Background Layer - Far (desktop only) */}
-      {!isMobile && (
-        <div className="absolute inset-0 overflow-hidden opacity-40 blur-md">
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-game-bgStart via-accent/20 to-game-bgEnd" />
-          <div className="absolute top-0 left-20 w-1 h-full bg-gradient-to-b from-foreground/10 to-transparent rotate-12 blur-sm" />
-          <div className="absolute top-0 right-32 w-1 h-full bg-gradient-to-b from-foreground/8 to-transparent -rotate-6 blur-sm" />
-        </div>
-      )}
-
-      {/* Background Scenery (blurry roots/leaves) */}
-      {gameState === 'playing' && obstaclesRef.current.map((obs, i) => (
-        <div
-          key={`obs-${i}`}
-          className="absolute bg-accent/60 rounded-full opacity-30 blur-sm"
-          style={{
-            left: `${obs.x}%`,
-            top: `${obs.y}%`,
-            width: `${obs.width}%`,
-            height: `${obs.height}%`,
-          }}
-        />
-      ))}
-
-      {/* Mid-ground - Glowing spores */}
-      {gameState === 'playing' && sporesRef.current.map((spore, i) => (
-        <div
-          key={`spore-${i}`}
-          className="absolute rounded-full bg-game-sporeGlow blur-sm"
-          style={{
-            left: `${spore.x}%`,
-            top: `${spore.y}%`,
-            width: `${spore.size}px`,
-            height: `${spore.size}px`,
-            opacity: spore.opacity,
-          }}
-        />
-      ))}
 
       {gameState === 'playing' && (
         <>
@@ -657,54 +618,7 @@ export const GameCanvas = () => {
         </>
       )}
 
-      {/* Foreground - Fireflies */}
-      {gameState === 'playing' && firefliesRef.current.map((firefly, i) => {
-        const blinkIntensity = Math.max(0, Math.sin(firefly.blinkPhase * Math.PI / 180));
-        return (
-          <div
-            key={`firefly-${i}`}
-            className="absolute rounded-full z-30"
-            style={{
-              left: `${firefly.x}%`,
-              top: `${firefly.y}%`,
-              width: `${firefly.size}px`,
-              height: `${firefly.size}px`,
-              background: `hsl(var(--firefly-blue))`,
-              opacity: firefly.opacity * blinkIntensity,
-            }}
-          />
-        );
-      })}
-
-      {/* Foreground - Raindrops */}
-      {gameState === 'playing' && raindropsRef.current.map((drop, i) => (
-        <div
-          key={`rain-${i}`}
-          className="absolute rounded-full bg-foreground/20 z-40"
-          style={{
-            left: `${drop.x}%`,
-            top: `${drop.y}%`,
-            width: `${drop.size}px`,
-            height: `${drop.size * 1.5}px`,
-            opacity: drop.opacity,
-          }}
-        />
-      ))}
-
-      {/* Foreground - Tiny gnats */}
-      {gameState === 'playing' && gnatsRef.current.map((gnat, i) => (
-        <div
-          key={`gnat-${i}`}
-          className="absolute rounded-full bg-background z-30"
-          style={{
-            left: `${gnat.x}%`,
-            top: `${gnat.y}%`,
-            width: `${gnat.size}px`,
-            height: `${gnat.size}px`,
-            opacity: gnat.opacity,
-          }}
-        />
-      ))}
+      {/* Foreground particle effects are now handled by ParallaxBackground */}
 
       {/* Spore Burst Effect */}
       {gameState === 'playing' && sporeBurstRef.current.particles.map((p, i) => {
