@@ -271,9 +271,9 @@ export const GameCanvas = () => {
         // Track pad number for visual effects
         currentPadNumberRef.current = newScore;
         
-        // Speed boost triggers every 10th pad (permanent multiplier)
-        if (newScore > 0 && newScore % 10 === 0) {
-          speedBoostMultiplierRef.current *= 1.15;
+        // Speed boost triggers every 7th pad (permanent multiplier)
+        if (newScore > 0 && newScore % 7 === 0) {
+          speedBoostMultiplierRef.current *= 1.075;
           soundManager.playSpeedup();
         }
         
