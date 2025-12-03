@@ -103,6 +103,7 @@ export const GameCanvas = () => {
       });
     }
     
+    console.log('Initialized pads:', newMossPads.map(p => ({ id: p.id, x: p.x.toFixed(1) })));
     mossPadsRef.current = newMossPads;
   };
 
