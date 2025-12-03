@@ -62,6 +62,7 @@ export const GameCanvas = () => {
     speedBoostMultiplierRef.current = 1;
     currentPadNumberRef.current = 0;
     nextPadIdRef.current = 0; // Reset pad IDs for consistent 27th pad dimming
+    lastLandedPadIdRef.current = null; // Reset to prevent stale deflating from previous game
     
     initializePads();
     launch();
