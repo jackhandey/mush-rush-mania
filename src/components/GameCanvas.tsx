@@ -285,6 +285,7 @@ export const GameCanvas = () => {
         // Speed boost triggers every 10th pad (permanent multiplier)
         if (newScore > 0 && newScore % 10 === 0) {
           speedBoostMultiplierRef.current *= 1.15;
+          soundManager.playSpeedup();
         }
         
         // Increase game speed after 24th pad with sustained multiplier
