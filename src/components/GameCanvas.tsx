@@ -42,7 +42,7 @@ export const GameCanvas = () => {
   const gameLoopRef = useRef<number>();
   const lastTapTime = useRef<number>(0);
   const frameCount = useRef(0);
-  const usedResurrectionRef = useRef(false); // Track if 33rd pad resurrection was used
+  
   
   // Mobile detection
   const isMobile = window.innerWidth <= 768;
@@ -62,7 +62,7 @@ export const GameCanvas = () => {
     speedBoostMultiplierRef.current = 1;
     currentPadNumberRef.current = 0;
     nextPadIdRef.current = 0; // Reset pad IDs for consistent 27th pad dimming
-    usedResurrectionRef.current = false; // Reset resurrection
+    
     initializePads();
     launch();
   }, []);
@@ -236,18 +236,6 @@ export const GameCanvas = () => {
       }
       
       if (newY > 82 || newY < 0) {
-        // Resurrection on 33rd pad miss (currentPadNumber 32 means heading to 33rd)
-        if (currentPadNumberRef.current === 32 && !usedResurrectionRef.current) {
-          usedResurrectionRef.current = true;
-          toast.success('RESURRECTED! 🌟', { duration: 1500 });
-          // Keep mushroom at fixed X (50), position Y above nearest pad
-          mushroomPosRef.current = { x: 50, y: 60 };
-          velocityRef.current = { x: 0, y: 0 };
-          isDroppingRef.current = false;
-          launch();
-          return;
-        }
-        
         setGameState('crashed');
         worldScrollSpeedRef.current = 0;
         soundManager.playCrash();
