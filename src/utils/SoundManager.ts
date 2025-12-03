@@ -7,7 +7,7 @@ type SoundName =
   | 'kidsLaugh' | 'ratchet' | 'lightsaber' | 'nerdy' | 'scaryUpbeat'
   | 'fiery' | 'hulk' | 'sword' | 'staircase' | 'love' | 'recordScratch'
   | 'policeSiren' | 'pacman' | 'pokemon' | 'punkGuitar' | 'traffic' | 'ocean'
-  | 'flightDing';
+  | 'flightDing' | 'speedup';
 
 interface SoundConfig {
   path: string;
@@ -53,6 +53,7 @@ class SoundManager {
     traffic: { path: '/assets/sounds/traffic.ogg', volume: 0.5 },
     ocean: { path: '/assets/sounds/ocean.ogg', volume: 0.5 },
     flightDing: { path: '/assets/sounds/flight-ding.ogg', volume: 0.6 },
+    speedup: { path: '/assets/sounds/speedup.ogg', volume: 0.7 },
   };
 
   private getContext(): AudioContext {
@@ -298,6 +299,10 @@ class SoundManager {
 
   playFlightDing(): void {
     this.play('flightDing', () => this.synthFlightDing());
+  }
+
+  playSpeedup(): void {
+    this.play('speedup', () => this.synthSpeedup());
   }
 
   // ========== MUTE CONTROL ==========
@@ -1002,6 +1007,38 @@ class SoundManager {
     
     osc.start(now);
     osc.stop(now + 0.5);
+  }
+
+  private synthSpeedup(): void {
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    // Accelerating whoosh with rising pitch
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+    
+    // Rising sweep
+    osc1.frequency.setValueAtTime(200, now);
+    osc1.frequency.exponentialRampToValueAtTime(800, now + 0.25);
+    osc1.type = 'sawtooth';
+    
+    // Harmonic layer
+    osc2.frequency.setValueAtTime(300, now);
+    osc2.frequency.exponentialRampToValueAtTime(1200, now + 0.25);
+    osc2.type = 'triangle';
+    
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.setValueAtTime(0.35, now + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+    
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.35);
+    osc2.stop(now + 0.35);
   }
 }
 
