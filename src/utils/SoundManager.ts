@@ -7,7 +7,7 @@ type SoundName =
   | 'kidsLaugh' | 'ratchet' | 'lightsaber' | 'nerdy' | 'scaryUpbeat'
   | 'fiery' | 'hulk' | 'sword' | 'staircase' | 'love' | 'recordScratch'
   | 'policeSiren' | 'pacman' | 'pokemon' | 'punkGuitar' | 'traffic' | 'ocean'
-  | 'flightDing' | 'speedup';
+  | 'flightDing' | 'speedup' | 'godJoy';
 
 interface SoundConfig {
   path: string;
@@ -54,6 +54,7 @@ class SoundManager {
     ocean: { path: '/assets/sounds/ocean.ogg', volume: 0.5 },
     flightDing: { path: '/assets/sounds/flight-ding.ogg', volume: 0.6 },
     speedup: { path: '/assets/sounds/speedup.ogg', volume: 0.7 },
+    godJoy: { path: '/assets/sounds/god-joy.ogg', volume: 0.7 },
   };
 
   private getContext(): AudioContext {
@@ -303,6 +304,10 @@ class SoundManager {
 
   playSpeedup(): void {
     this.play('speedup', () => this.synthSpeedup());
+  }
+
+  playGodJoy(): void {
+    this.play('godJoy', () => this.synthGodJoy());
   }
 
   // ========== MUTE CONTROL ==========
@@ -1039,6 +1044,51 @@ class SoundManager {
     osc2.start(now);
     osc1.stop(now + 0.35);
     osc2.stop(now + 0.35);
+  }
+
+  private synthGodJoy(): void {
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    // Heavenly choir-like chord with shimmer
+    const frequencies = [261.63, 329.63, 392, 523.25]; // C major chord + octave
+    const oscs: OscillatorNode[] = [];
+    const gains: GainNode[] = [];
+    
+    frequencies.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.setValueAtTime(freq * 1.02, now + 0.2); // Slight detune for shimmer
+      osc.frequency.setValueAtTime(freq, now + 0.4);
+      osc.type = i % 2 === 0 ? 'sine' : 'triangle';
+      
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.15, now + 0.1);
+      gain.gain.setValueAtTime(0.15, now + 0.5);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 1.2);
+      
+      osc.start(now);
+      osc.stop(now + 1.2);
+      oscs.push(osc);
+      gains.push(gain);
+    });
+    
+    // Ascending sparkle
+    const sparkle = ctx.createOscillator();
+    const sparkleGain = ctx.createGain();
+    sparkle.connect(sparkleGain);
+    sparkleGain.connect(ctx.destination);
+    sparkle.frequency.setValueAtTime(800, now);
+    sparkle.frequency.exponentialRampToValueAtTime(2000, now + 0.3);
+    sparkle.type = 'sine';
+    sparkleGain.gain.setValueAtTime(0.1, now);
+    sparkleGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+    sparkle.start(now);
+    sparkle.stop(now + 0.4);
   }
 }
 
