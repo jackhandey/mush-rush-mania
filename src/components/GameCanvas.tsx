@@ -328,6 +328,8 @@ export const GameCanvas = () => {
           soundManager.playTraffic();
         } else if (newScore === 310) {
           soundManager.playOcean();
+        } else if (newScore === 33) {
+          soundManager.playGodJoy();
         } else if ([4, 8, 15, 16, 23].includes(newScore)) {
           soundManager.playFlightDing();
         } else if (newScore === 42) {
