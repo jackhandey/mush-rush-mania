@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { soundManager } from '@/utils/SoundManager';
 import { Volume2, VolumeX } from 'lucide-react';
 import { Button } from './ui/button';
+import { showSafeBanner, hideBanner, handleTryAgain } from '@/AdMobController';
 
 interface MossPad {
   id: number;
@@ -444,20 +445,7 @@ export const GameCanvas = () => {
       </button>
       
       {/* Menu Screen */}
-      {gameState === 'menu' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-background/70 backdrop-blur-md">
-          <h1 className="text-5xl md:text-7xl font-bold text-primary mb-8 tracking-wider drop-shadow-[0_0_30px_hsl(var(--primary)/0.5)] text-center px-4">
-            MUSH RUSH MANIA
-          </h1>
-          
-          <div className="mb-8 animate-bounce-slow">
-            <Grumblecap isDropping={false} isCrashed={false} />
-          </div>
-          
-          <p className="text-lg md:text-xl text-muted-foreground mb-2">tap to land on the logs</p>
-          <p className="text-2xl md:text-3xl text-foreground font-bold animate-pulse">TAP TO START</p>
-        </div>
-      )}
+      {gameState === 'menu' && <MenuScreen onStart={() => { hideBanner(); startGame(); }} />}
 
       {gameState === 'playing' && (
         <>
@@ -616,27 +604,65 @@ export const GameCanvas = () => {
       })}
 
       {/* Crash Screen */}
-      {gameState === 'crashed' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-destructive/20 backdrop-blur-sm">
-          <div className="mb-4">
-            <Grumblecap isDropping={false} isCrashed={true} />
-          </div>
-          <p className="text-4xl font-bold text-foreground mb-2">Score: {score}</p>
-          <Button 
-            size="lg"
-            onClick={(e) => {
-              e.stopPropagation();
-              startGame();
-            }}
-            className="text-2xl px-8 py-6 mt-4"
-          >
-            Try Again
-          </Button>
-        </div>
-      )}
+      {gameState === 'crashed' && <CrashScreen score={score} onTryAgain={() => handleTryAgain(startGame)} />}
     </div>
   );
 };
+
+// Menu Screen Component
+const MenuScreen = memo(({ onStart }: { onStart: () => void }) => {
+  useEffect(() => {
+    showSafeBanner();
+  }, []);
+
+  return (
+    <div 
+      className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-background/70 backdrop-blur-md"
+      onClick={onStart}
+      onTouchStart={(e) => {
+        e.preventDefault();
+        onStart();
+      }}
+    >
+      <h1 className="text-5xl md:text-7xl font-bold text-primary mb-8 tracking-wider drop-shadow-[0_0_30px_hsl(var(--primary)/0.5)] text-center px-4">
+        MUSH RUSH MANIA
+      </h1>
+      
+      <div className="mb-8 animate-bounce-slow">
+        <Grumblecap isDropping={false} isCrashed={false} />
+      </div>
+      
+      <p className="text-lg md:text-xl text-muted-foreground mb-2">tap to land on the logs</p>
+      <p className="text-2xl md:text-3xl text-foreground font-bold animate-pulse">TAP TO START</p>
+    </div>
+  );
+});
+
+// Crash Screen Component
+const CrashScreen = memo(({ score, onTryAgain }: { score: number; onTryAgain: () => void }) => {
+  useEffect(() => {
+    showSafeBanner();
+  }, []);
+
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-destructive/20 backdrop-blur-sm">
+      <div className="mb-4">
+        <Grumblecap isDropping={false} isCrashed={true} />
+      </div>
+      <p className="text-4xl font-bold text-foreground mb-2">Score: {score}</p>
+      <Button 
+        size="lg"
+        onClick={(e) => {
+          e.stopPropagation();
+          onTryAgain();
+        }}
+        className="text-2xl px-8 py-6 mt-4"
+      >
+        Try Again
+      </Button>
+    </div>
+  );
+});
 
 // Memoized Grumblecap wrapper to prevent unnecessary re-renders
 const MemoizedGrumblecap = memo(({ isDropping, isCrashed, isSpinning, style }: { 
