@@ -22,6 +22,14 @@ workflows:
         script: | 
           npx cap add android
           npx cap sync android
+
+          - name: Inject AdMob App ID
+        script: | 
+          # Define your App ID
+          ADMOB_APP_ID="ca-app-pub-1939766549444356~7724767069"
+
+          # Inject it into AndroidManifest.xml
+          sed -i '' "s|</application>|<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"$ADMOB_APP_ID\"/> </application>|g" android/app/src/main/AndroidManifest.xml
   
 # --- ADD THIS NEW SECTION HERE ---
       - name: Update Version Code (Brute Force)
