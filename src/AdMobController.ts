@@ -10,7 +10,7 @@ let retryCount = 0;
 
 export async function initializeAdMob() {
   try {
-    await AdMob.initialize({ requestTrackingAuthorization: true });
+    await AdMob.initialize({});
   } catch (e) { console.error('AdMob Init Failed', e); }
 }
 
@@ -19,7 +19,7 @@ export async function showSafeBanner() {
     await AdMob.showBanner({
       adId: BANNER_ID,
       adSize: BannerAdSize.ADAPTIVE_BANNER,
-      position: BannerAdPosition.BOTTOM, 
+      position: BannerAdPosition.BOTTOM_CENTER, 
       margin: 0,
       isTesting: true // <--- CHANGE TO FALSE BEFORE PUBLISHING
     });
