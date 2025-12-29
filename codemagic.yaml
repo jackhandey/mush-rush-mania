@@ -1,5 +1,3 @@
-# A basic codemagic.yaml file for Ionic Capacitor (Android)
-
 workflows:
   ionic-android:
     name: Ionic Android
@@ -7,43 +5,42 @@ workflows:
     environment:
       node: 20.10.0
       java: 21
-      # --- THIS IS NEW ---
       groups:
-        - keystore_credentials # This loads all the secrets you just made
-        
+        - keystore_credentials
+
     scripts:
       - name: Install npm dependencies
         script: | 
           npm install
+
       - name: Build Ionic app
         script: | 
+          # We run the build to create the 'dist' folder
           npm run build
-      - name: Sync to Capacitor
+
+      - name: Create Android Platform
         script: | 
+          # This creates the 'android' folder. If it fails, the build stops.
           npx cap add android
           npx cap sync android
 
-          - name: Inject AdMob App ID
+      - name: Inject AdMob App ID
         script: | 
           # Define your App ID
           ADMOB_APP_ID="ca-app-pub-1939766549444356~7724767069"
-
-          # Inject it into AndroidManifest.xml
-          sed -i '' "s|</application>|<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"$ADMOB_APP_ID\"/> </application>|g" android/app/src/main/AndroidManifest.xml
-  
-# --- ADD THIS NEW SECTION HERE ---
-      - name: Update Version Code (Brute Force)
-        script: | 
-          # This finds "versionCode X" in the file and replaces it with your Codemagic build number + 100
-          sed -i '' "s/versionCode [0-9]*/versionCode $((BUILD_NUMBER + 100))/g" android/app/build.gradle
-          echo "Updated version code to $((BUILD_NUMBER + 100))"          
           
-      # --- THIS SCRIPT IS NEW ---
+          # Inject it into the AndroidManifest.xml
+          sed -i '' "s|</application>|<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"$ADMOB_APP_ID\"/> </application>|g" android/app/src/main/AndroidManifest.xml
+
+      - name: Update Version Code
+        script: | 
+          sed -i '' "s/versionCode [0-9]*/versionCode $((BUILD_NUMBER + 100))/g" android/app/build.gradle
+          echo "Updated version code to $((BUILD_NUMBER + 100))"
+
       - name: Set up keystore
         script: | 
           echo $CM_KEYSTORE | base64 --decode > /tmp/keystore.jks
 
-      # --- THIS SCRIPT IS MODIFIED ---
       - name: Build Android App Bundle
         script: | 
           cd android
@@ -52,6 +49,6 @@ workflows:
             -Pandroid.injected.signing.store.password=$CM_KEYSTORE_PASSWORD \
             -Pandroid.injected.signing.key.alias=$CM_KEY_ALIAS \
             -Pandroid.injected.signing.key.password=$CM_KEY_PASSWORD
-            
+
     artifacts:
       - android/app/build/outputs/bundle/release/app-release.aab
