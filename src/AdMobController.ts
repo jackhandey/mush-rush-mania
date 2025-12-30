@@ -21,7 +21,7 @@ export async function showSafeBanner() {
       adSize: BannerAdSize.ADAPTIVE_BANNER,
       position: BannerAdPosition.BOTTOM_CENTER, 
       margin: 0,
-      isTesting: true // <--- CHANGE TO FALSE BEFORE PUBLISHING
+      isTesting: false // <--- CHANGE TO FALSE BEFORE PUBLISHING
     });
   } catch (e) { console.error('Show Banner Failed', e); }
 }
@@ -34,7 +34,7 @@ export async function handleTryAgain(startGameCallback: () => void) {
   retryCount++;
   if (retryCount % DEATHS_BEFORE_AD === 0) {
     try {
-      await AdMob.prepareInterstitial({ adId: INTERSTITIAL_ID, isTesting: true });
+      await AdMob.prepareInterstitial({ adId: INTERSTITIAL_ID, isTesting: false });
       await AdMob.showInterstitial();
       startGameCallback();
     } catch (e) {
