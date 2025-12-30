@@ -15,25 +15,23 @@ workflows:
 
       - name: Build Ionic app
         script: | 
-          # We run the build to create the 'dist' folder
           npm run build
 
       - name: Create Android Platform
         script: | 
-          # This creates the 'android' folder. If it fails, the build stops.
           npx cap add android
           npx cap sync android
 
-      - name: Inject AdMob App ID
+      - name: Inject AdMob ID and Permission
         script: | 
-          # Define your App ID
+          # 1. Define your App ID
           ADMOB_APP_ID="ca-app-pub-1939766549444356~7724767069"
-          
-          # 1. Inject the App ID (Meta Data) inside the Application tag
+
+          # 2. Inject App ID: Looks for the closing </application> tag and inserts ID before it
           sed -i '' "s|</application>|<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"$ADMOB_APP_ID\"/> </application>|g" android/app/src/main/AndroidManifest.xml
           
-          # 2. Inject the AD_ID Permission (Required for Android 13+) BEFORE the application tag
-          sed -i '' 's|<application|<uses-permission android:name="com.google.android.gms.permission.AD_ID"/> <application|g' android/app/src/main/AndroidManifest.xml
+          # 3. Inject Permission: Looks for the closing </manifest> tag (at the bottom) and inserts Permission before it
+          sed -i '' 's|</manifest>|<uses-permission android:name="com.google.android.gms.permission.AD_ID"/> </manifest>|g' android/app/src/main/AndroidManifest.xml
 
       - name: Update Version Code
         script: | 
