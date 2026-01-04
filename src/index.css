@@ -8,52 +8,93 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Deep forest darkness */
-    --background: 140 15% 8%;
-    --foreground: 180 30% 85%;
+    /* Deep twilight forest - cool dark tones */
+    --background: 220 25% 6%;
+    --foreground: 200 20% 85%;
 
-    /* Bioluminescent cyan - primary game color */
-    --primary: 180 75% 45%;
-    --primary-foreground: 140 15% 8%;
+    /* Bioluminescent cyan - primary game color (high contrast with red/white player) */
+    --primary: 175 80% 50%;
+    --primary-foreground: 220 25% 6%;
 
-    /* Soft purple glow - secondary */
-    --secondary: 270 55% 55%;
-    --secondary-foreground: 140 15% 8%;
+    /* Deep purple glow - secondary */
+    --secondary: 270 50% 45%;
+    --secondary-foreground: 200 20% 90%;
 
-    /* Deep root brown - accent */
-    --accent: 25 25% 20%;
-    --accent-foreground: 180 30% 85%;
+    /* Forest green accent */
+    --accent: 160 30% 18%;
+    --accent-foreground: 175 60% 80%;
 
-    /* Muted forest green */
-    --muted: 140 15% 25%;
-    --muted-foreground: 180 20% 65%;
+    /* Muted twilight tones */
+    --muted: 220 20% 18%;
+    --muted-foreground: 200 15% 60%;
 
     /* Spore cloud - destructive */
     --destructive: 45 60% 50%;
-    --destructive-foreground: 140 15% 8%;
+    --destructive-foreground: 220 25% 6%;
 
-    --card: 140 15% 12%;
-    --card-foreground: 180 30% 85%;
+    --card: 220 25% 10%;
+    --card-foreground: 200 20% 85%;
 
-    --popover: 140 15% 12%;
-    --popover-foreground: 180 30% 85%;
+    --popover: 220 25% 10%;
+    --popover-foreground: 200 20% 85%;
 
-    --border: 140 20% 18%;
-    --input: 140 20% 18%;
-    --ring: 180 75% 45%;
+    --border: 220 20% 15%;
+    --input: 220 20% 15%;
+    --ring: 175 80% 50%;
 
     --radius: 0.75rem;
 
-    /* Game-specific colors */
-    --log-color: 25 20% 15%;
-    --fungal-shelf: 280 60% 35%;
-    --fungal-glow: 180 85% 55%;
-    --mushroom-cap: 20 45% 55%;
-    --mushroom-stem: 40 40% 80%;
-    --game-bg-start: 140 20% 5%;
-    --game-bg-end: 140 15% 12%;
+    /* ========== PARALLAX BACKGROUND COLORS ========== */
+    /* Sky gradient - deep twilight blues/purples */
+    --parallax-sky: 240 35% 8%;
+    --parallax-sky-mid: 260 30% 12%;
+    --parallax-sky-bottom: 220 25% 10%;
+    
+    /* Moon */
+    --moon-glow: 45 30% 85%;
+    --moon-surface: 45 20% 70%;
+    --moon-dark: 45 15% 50%;
+    
+    /* Hills silhouette - deep blues/purples */
+    --hill-far: 250 30% 10%;
+    --hill-near: 240 25% 8%;
+    --tree-silhouette: 240 30% 5%;
+    
+    /* Mid-ground elements - organic vector style */
+    --log-color: 25 30% 18%;
+    --log-dark: 20 25% 10%;
+    --log-light: 30 20% 25%;
+    --root-color: 260 25% 12%;
+    --rock-moss: 150 35% 18%;
+    --rock-dark: 250 30% 10%;
+    --rock-surface: 240 25% 18%;
+    
+    /* Platform colors - visible but natural */
+    --platform-moss: 140 40% 28%;
+    
+    /* Fern colors - deep blues/purples to blend with night sky */
+    --fern-color: 250 35% 22%;
+    --fern-dark: 260 30% 14%;
+    
+    /* Foreground elements - deep blues/purples */
+    --grass-blade: 255 35% 25%;
+    --vine-color: 260 30% 20%;
+    --fg-silhouette: 250 35% 6%;
+    
+    /* Atmospheric effects */
+    --god-ray: 45 40% 70%;
+    --fog-color: 220 20% 15%;
+    --spore-glow: 175 70% 55%;
+    --firefly-glow: 55 80% 60%;
+    
+    /* ========== GAMEPLAY ELEMENTS ========== */
+    --fungal-shelf: 280 55% 35%;
+    --fungal-glow: 175 85% 55%;
+    --mushroom-cap: 0 80% 55%;
+    --mushroom-stem: 45 60% 92%;
+    --game-bg-start: 240 30% 5%;
+    --game-bg-end: 220 25% 10%;
     --firefly-blue: 200 80% 60%;
-    --spore-glow: 180 70% 50%;
   }
 }
 
@@ -65,4 +106,21 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Safe area insets for notch-aware design on modern phones */
+.safe-area-container {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-horizontal {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }

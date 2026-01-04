@@ -1,337 +1,403 @@
 import { useEffect, useRef, useState, useCallback, memo } from 'react';
 import { Grumblecap } from './Grumblecap';
-import { Tutorial } from './Tutorial';
+import { ParallaxBackground } from './ParallaxBackground';
 import { toast } from 'sonner';
-import { soundEffects } from '@/utils/soundEffects';
+import { soundManager } from '@/utils/SoundManager';
 import { Volume2, VolumeX } from 'lucide-react';
+import { Button } from './ui/button';
+import { showSafeBanner, hideBanner, handleTryAgain } from '@/AdMobController';
 
-interface GameObject {
+interface MossPad {
+  id: number;
   x: number;
   y: number;
   width: number;
   height: number;
-}
-
-interface MossPad extends GameObject {
   angle: number;
   speed: number;
   breathPhase: number;
   glowIntensity: number;
-}
-
-interface Particle {
-  x: number;
-  y: number;
-  size: number;
-  opacity: number;
-  speed: number;
-  drift: number;
-}
-
-interface Firefly extends Particle {
-  blinkPhase: number;
-  blinkSpeed: number;
-}
-
-interface Raindrop extends Particle {
-  blur: number;
+  isDeflating: boolean;
+  deflateProgress: number;
 }
 
 export const GameCanvas = () => {
-  const [gameState, setGameState] = useState<'tutorial' | 'menu' | 'playing' | 'crashed'>('menu');
-  const [showTutorial, setShowTutorial] = useState(false);
+  const [gameState, setGameState] = useState<'menu' | 'playing' | 'crashed'>('menu');
   const [score, setScore] = useState(0);
-  const [mushroomPos, setMushroomPos] = useState({ x: 50, y: 80 });
-  const [velocity, setVelocity] = useState({ x: 0, y: 0 });
-  const [isDropping, setIsDropping] = useState(false);
-  const [obstacles, setObstacles] = useState<GameObject[]>([]);
-  const [mossPads, setMossPads] = useState<MossPad[]>([]);
-  const [spores, setSpores] = useState<Particle[]>([]);
-  const [fireflies, setFireflies] = useState<Firefly[]>([]);
-  const [raindrops, setRaindrops] = useState<Raindrop[]>([]);
-  const [gnats, setGnats] = useState<Particle[]>([]);
-  const [worldScrollSpeed, setWorldScrollSpeed] = useState(0);
+  const [renderTick, setRenderTick] = useState(0);
+  const [isSpinning, setIsSpinning] = useState(false);
+  
+  // Use refs for frequently updated values to avoid re-renders
+  const mushroomPosRef = useRef({ x: 50, y: 80 });
+  const velocityRef = useRef({ x: 0, y: 0 });
+  const isDroppingRef = useRef(false);
+  const mossPadsRef = useRef<MossPad[]>([]);
+  const sporeBurstRef = useRef<{ x: number; y: number; particles: { angle: number; distance: number; opacity: number }[] }>({ x: 0, y: 0, particles: [] });
+  const worldScrollSpeedRef = useRef(0);
+  const speedBoostMultiplierRef = useRef(1);
+  const lastLandedPadIdRef = useRef<number | null>(null);
+  const nextPadIdRef = useRef(0);
+  const currentPadNumberRef = useRef(0); // Tracks which pad number the player is on
+  
   const [isMuted, setIsMuted] = useState(false);
   const gameLoopRef = useRef<number>();
+  const lastTapTime = useRef<number>(0);
+  const frameCount = useRef(0);
+  
+  
+  // Mobile detection
+  const isMobile = window.innerWidth <= 768;
 
-  const checkCollision = useCallback((a: GameObject, b: GameObject) => {
-    return (
-      a.x < b.x + b.width &&
-      a.x + a.width > b.x &&
-      a.y < b.y + b.height &&
-      a.y + a.height > b.y
-    );
+  // Preload sounds on mount
+  useEffect(() => {
+    soundManager.preload();
   }, []);
 
   const startGame = useCallback(() => {
-    setShowTutorial(false);
     setGameState('playing');
     setScore(0);
-    setMushroomPos({ x: 50, y: 75 });
-    setVelocity({ x: 0, y: 0 });
-    setIsDropping(false);
-    setWorldScrollSpeed(2);
-    initializeObstacles();
+    mushroomPosRef.current = { x: 50, y: 75 };
+    velocityRef.current = { x: 0, y: 0 };
+    isDroppingRef.current = false;
+    worldScrollSpeedRef.current = isMobile ? 2.2 : 2.5;
+    speedBoostMultiplierRef.current = 1;
+    currentPadNumberRef.current = 0;
+    nextPadIdRef.current = 0; // Reset pad IDs for consistent 27th pad dimming
+    lastLandedPadIdRef.current = null; // Reset to prevent stale deflating from previous game
+    
+    initializePads();
     launch();
   }, []);
 
-  const initializeObstacles = () => {
-    const newObstacles: GameObject[] = [];
+  const initializePads = () => {
     const newMossPads: MossPad[] = [];
     
-    // Create background scenery (roots/leaves) scattered across the view
-    for (let i = 0; i < 10; i++) {
-      newObstacles.push({
-        x: i * 15,
-        y: 10 + Math.random() * 50,
-        width: 12,
-        height: 6,
-      });
-    }
+    const padWidth = isMobile ? 16 : 9;
+    const padHeight = isMobile ? 5 : 3;
     
-    // Create fungal shelves - starting from left edge
-    for (let i = 0; i < 12; i++) {
+    // First pad starts AHEAD of mushroom (mushroom at x=50)
+    let currentX = isMobile ? 54 : 56;
+    for (let i = 0; i < 6; i++) {
+      if (i > 0) {
+        const progressFactor = Math.min(i / 4, 1);
+        const minSpacing = isMobile ? (18 + progressFactor * 10) : (16 + progressFactor * 8);
+        const maxSpacing = isMobile ? (22 + progressFactor * 18) : (20 + progressFactor * 17);
+        const spacing = minSpacing + Math.random() * (maxSpacing - minSpacing);
+        currentX += spacing;
+      }
+      
+      const baseY = 75;
+      const yVariance = i > 7 ? (isMobile ? 14 : 18) : 4;
+      const randomY = baseY + (Math.random() - 0.5) * yVariance;
+      
       newMossPads.push({
-        x: i * 15 + 5,
-        y: 75,
-        width: 10.18,
-        height: 3.5,
-        angle: i * 45,
-        speed: 0.5 + (Math.random() * 0.3),
+        id: nextPadIdRef.current++,
+        x: currentX,
+        y: randomY,
+        width: padWidth,
+        height: padHeight,
+        angle: i * 60,
+        speed: 0.4,
         breathPhase: Math.random() * 360,
-        glowIntensity: 0.5 + Math.random() * 0.5,
+        glowIntensity: 0.6,
+        isDeflating: false,
+        deflateProgress: 0,
       });
     }
     
-    // Initialize spores (mid-ground particles) - reduced count
-    const newSpores: Particle[] = [];
-    for (let i = 0; i < 15; i++) {
-      newSpores.push({
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: 1 + Math.random() * 2,
-        opacity: 0.3 + Math.random() * 0.4,
-        speed: 0.05 + Math.random() * 0.1,
-        drift: Math.random() * 0.5 - 0.25,
-      });
-    }
-    
-    // Initialize fireflies (foreground) - reduced count
-    const newFireflies: Firefly[] = [];
-    for (let i = 0; i < 5; i++) {
-      newFireflies.push({
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: 2 + Math.random() * 3,
-        opacity: 0.6,
-        speed: 0.1 + Math.random() * 0.15,
-        drift: Math.random() * 0.3 - 0.15,
-        blinkPhase: Math.random() * 360,
-        blinkSpeed: 2 + Math.random() * 3,
-      });
-    }
-    
-    // Initialize raindrops (foreground)
-    const newRaindrops: Raindrop[] = [];
-    for (let i = 0; i < 3; i++) {
-      newRaindrops.push({
-        x: Math.random() * 100,
-        y: -10 - Math.random() * 20,
-        size: 40 + Math.random() * 60,
-        opacity: 0.15,
-        speed: 0.3 + Math.random() * 0.2,
-        drift: 0,
-        blur: 15 + Math.random() * 10,
-      });
-    }
-    
-    // Initialize gnats (foreground) - reduced count
-    const newGnats: Particle[] = [];
-    for (let i = 0; i < 8; i++) {
-      newGnats.push({
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: 0.5 + Math.random() * 1,
-        opacity: 0.4 + Math.random() * 0.3,
-        speed: 0.3 + Math.random() * 0.4,
-        drift: Math.random() * 1 - 0.5,
-      });
-    }
-    
-    setObstacles(newObstacles);
-    setMossPads(newMossPads);
-    setSpores(newSpores);
-    setFireflies(newFireflies);
-    setRaindrops(newRaindrops);
-    setGnats(newGnats);
+    console.log('Initialized pads:', newMossPads.map(p => ({ id: p.id, x: p.x.toFixed(1) })));
+    mossPadsRef.current = newMossPads;
   };
 
   const launch = useCallback(() => {
-    const horizontalVelocity = 6;
-    const verticalVelocity = -12;
+    // Consistent arc throughout game - difficulty comes from pad spacing
+    // Flatter arc: less vertical velocity, lower gravity for longer hang time
+    const horizontalVelocity = isMobile ? 85 : 24.14;
+    const verticalVelocity = isMobile ? -14 : -17.8;
     
-    setVelocity({ x: horizontalVelocity, y: verticalVelocity });
-    setIsDropping(false);
-    soundEffects.playLaunch();
+    velocityRef.current = { x: horizontalVelocity, y: verticalVelocity };
+    isDroppingRef.current = false;
+    soundManager.playLaunch();
   }, []);
 
   const handleTap = useCallback(() => {
-    if (gameState === 'tutorial') return;
+    const now = Date.now();
+    if (now - lastTapTime.current < 100) return;
+    lastTapTime.current = now;
     
     if (gameState === 'menu') {
       startGame();
       return;
     }
     
-    if (gameState === 'crashed') {
-      startGame();
-      return;
-    }
-    
-    if (gameState === 'playing' && !isDropping) {
-      setIsDropping(true);
-      setVelocity({ x: 0, y: 15 });
-      soundEffects.playThwack();
+    if (gameState === 'playing' && !isDroppingRef.current) {
+      isDroppingRef.current = true;
+      const dropSpeed = isMobile ? 13 : 15;
+      velocityRef.current = { x: 0, y: dropSpeed };
+      soundManager.playThwack();
       toast('THWACK!', { duration: 500 });
     }
-  }, [gameState, isDropping, startGame]);
+  }, [gameState, startGame]);
 
   useEffect(() => {
     if (gameState !== 'playing') return;
 
     const gameLoop = () => {
-      setObstacles(obs => {
-        const scrolled = obs.map(o => ({ ...o, x: o.x - worldScrollSpeed * 0.1 }));
-        const visible = scrolled.filter(o => o.x > -20);
-        while (visible.length < 10) {
-          const lastX = visible.length > 0 ? Math.max(...visible.map(o => o.x)) : 100;
-          visible.push({
-            x: lastX + 15,
-            y: 10 + Math.random() * 50,
-            width: 12,
-            height: 6,
-          });
-        }
-        return visible;
-      });
+      const worldSpeed = worldScrollSpeedRef.current;
       
-      setMossPads(pads => {
-        const scrolled = pads.map(p => {
-          const newAngle = (p.angle + p.speed) % 360;
-          const newBreathPhase = (p.breathPhase + 2) % 360;
-          const baseY = 75;
-          const verticalOffset = Math.sin(newAngle * Math.PI / 180) * 5;
-          
-          return {
-            ...p,
-            x: p.x - worldScrollSpeed * 0.1,
-            y: baseY + verticalOffset,
-            angle: newAngle,
-            breathPhase: newBreathPhase,
-          };
+      // Update moss pads - mutate in place for performance
+      const pads = mossPadsRef.current;
+      let validPadCount = 0;
+      for (let i = 0; i < pads.length; i++) {
+        const p = pads[i];
+        p.x -= worldSpeed * 0.1;
+        if (p.x > -20) {
+          p.angle = (p.angle + p.speed) % 360;
+          p.breathPhase = (p.breathPhase + 2) % 360;
+          p.y = 75 + Math.sin(p.angle * Math.PI / 180) * 5;
+          pads[validPadCount++] = p;
+        }
+      }
+      pads.length = validPadCount;
+      
+      while (mossPadsRef.current.length < 6) {
+        const lastX = mossPadsRef.current.length > 0 ? Math.max(...mossPadsRef.current.map(p => p.x)) : 100;
+        const padWidth = isMobile ? 16 : 9;
+        const padHeight = isMobile ? 5 : 3;
+      // Progressive difficulty based on score
+      const difficultyFactor = Math.min(score / 8, 1); // Maxes out at score 8
+      const minSpacing = isMobile ? (18 + difficultyFactor * 8) : (16 + difficultyFactor * 10);
+      const maxSpacing = isMobile ? (22 + difficultyFactor * 14) : (20 + difficultyFactor * 18);
+      const spacing = minSpacing + Math.random() * (maxSpacing - minSpacing);
+      const baseY = 75;
+      // Vertical variance kicks in after score > 7, increases at 24, then every 33 pads after
+      let yVariance = 4;
+      if (score > 24) {
+        const baseVariance = isMobile ? 22 : 28;
+        const incrementsAfter24 = Math.floor((score - 24) / 33);
+        const additionalVariance = incrementsAfter24 * (isMobile ? 4 : 5);
+        yVariance = baseVariance + additionalVariance + (difficultyFactor * 15);
+      } else if (score > 7) {
+        yVariance = (isMobile ? 14 : 18) + (difficultyFactor * 10);
+      }
+      const randomY = baseY + (Math.random() - 0.5) * yVariance;
+        
+        mossPadsRef.current.push({
+          id: nextPadIdRef.current++,
+          x: lastX + spacing,
+          y: randomY,
+          width: padWidth,
+          height: padHeight,
+          angle: Math.random() * 360,
+          speed: 0.4,
+          breathPhase: Math.random() * 360,
+          glowIntensity: 0.6,
+          isDeflating: false,
+          deflateProgress: 0,
         });
-        
-        const visible = scrolled.filter(p => p.x > -20);
-        while (visible.length < 12) {
-          const lastX = visible.length > 0 ? Math.max(...visible.map(p => p.x)) : 100;
-          visible.push({
-            x: lastX + 15,
-            y: 75,
-            width: 10.18,
-            height: 3.5,
-            angle: Math.random() * 360,
-            speed: 0.5 + (Math.random() * 0.3),
-            breathPhase: Math.random() * 360,
-            glowIntensity: 0.5 + Math.random() * 0.5,
-          });
-        }
-        return visible;
-      });
+      }
       
-      setSpores(prev => prev.map(s => ({
-        ...s,
-        y: s.y + s.speed,
-        x: s.x + s.drift,
-        ...(s.y > 110 && { y: -10, x: Math.random() * 100 })
-      })));
-      
-      setFireflies(prev => prev.map(f => ({
-        ...f,
-        x: f.x + f.drift,
-        y: f.y + f.speed * 0.5,
-        blinkPhase: (f.blinkPhase + f.blinkSpeed) % 360,
-        ...(f.x > 110 && { x: -10 }),
-        ...(f.x < -10 && { x: 110 }),
-        ...(f.y > 110 && { y: -10 })
-      })));
-      
-      setRaindrops(prev => prev.map(r => ({
-        ...r,
-        y: r.y + r.speed,
-        ...(r.y > 110 && { y: -r.size, x: Math.random() * 100 })
-      })));
-      
-      setGnats(prev => prev.map(g => ({
-        ...g,
-        x: g.x + g.drift,
-        y: g.y + g.speed * Math.sin(Date.now() * 0.01) * 0.2,
-        ...(g.x > 110 && { x: -10 }),
-        ...(g.x < -10 && { x: 110 })
-      })));
-      
-      setMushroomPos(prev => {
-        let newX = prev.x;
-        let newY = prev.y + velocity.y * 0.1;
-        
-        if (!isDropping) {
-          setVelocity(v => ({ ...v, y: v.y + 0.55 }));
-        }
-        
-        if (newY > 82 || newY < 0) {
-          setGameState('crashed');
-          setWorldScrollSpeed(0);
-          soundEffects.playCrash();
-          toast.error(`Crashed! Score: ${score}`, { duration: 2000 });
-          return prev;
-        }
-        
-        // Use center point of mushroom for precise landing detection
-        const mushroomCenterX = newX + 2.5; // Center of 5% wide mushroom
-        const mushroomBottomY = newY + 5;   // Bottom of mushroom
-        
-        let landedPad: MossPad | null = null;
-        mossPads.forEach(pad => {
-          // Trigger landing when mushroom center is over pad and bottom touches or passes pad surface
-          if (velocity.y > 0 && 
-              mushroomCenterX >= pad.x && 
-              mushroomCenterX <= pad.x + pad.width &&
-              mushroomBottomY >= pad.y - 0.5 && 
-              mushroomBottomY <= pad.y + pad.height + 0.5) {
-            landedPad = pad;
+      // Update deflating pads - mutate in place
+      let deflateValidCount = 0;
+      for (let i = 0; i < mossPadsRef.current.length; i++) {
+        const p = mossPadsRef.current[i];
+        if (p.isDeflating) {
+          p.deflateProgress += 0.08;
+          if (p.deflateProgress < 1) {
+            mossPadsRef.current[deflateValidCount++] = p;
           }
-        });
+        } else {
+          mossPadsRef.current[deflateValidCount++] = p;
+        }
+      }
+      mossPadsRef.current.length = deflateValidCount;
+      
+      // Update spore burst - mutate in place
+      if (sporeBurstRef.current.particles.length > 0) {
+        const particles = sporeBurstRef.current.particles;
+        let validCount = 0;
+        for (let i = 0; i < particles.length; i++) {
+          particles[i].distance += 1.5;
+          particles[i].opacity -= 0.015;
+          if (particles[i].opacity > 0) {
+            particles[validCount++] = particles[i];
+          }
+        }
+        particles.length = validCount;
+      }
+      
+      // Update mushroom physics
+      const velocity = velocityRef.current;
+      const isDropping = isDroppingRef.current;
+      // Mushroom stays at fixed X, world scrolls instead
+      let newY = mushroomPosRef.current.y + velocity.y * 0.1;
+      
+      if (!isDropping) {
+        const gravity = isMobile ? 0.18 : 0.65;
+        velocityRef.current = { ...velocity, y: velocity.y + gravity };
+      }
+      
+      if (newY > 82 || newY < 0) {
+        setGameState('crashed');
+        worldScrollSpeedRef.current = 0;
+        soundManager.playCrash();
+        toast.error(`Crashed! Score: ${score}`, { duration: 2000 });
+        return;
+      }
+      
+      // Collision detection
+      const mushroomWidth = isMobile ? 8 : 5;
+      const mushroomHeight = isMobile ? 8 : 5;
+      const mushroomCenterX = mushroomPosRef.current.x + mushroomWidth / 2;
+      const mushroomBottomY = newY + mushroomHeight;
+      
+      let landedPad: MossPad | null = null;
+      for (const pad of mossPadsRef.current) {
+        if (velocity.y > 0 && 
+            mushroomCenterX >= pad.x && 
+            mushroomCenterX <= pad.x + pad.width &&
+            mushroomBottomY >= pad.y - 0.5 && 
+            mushroomBottomY <= pad.y + pad.height + 0.5) {
+          landedPad = pad;
+          break;
+        }
+      }
+      
+      if (landedPad && isDropping) {
+        const newScore = score + 1;
+        setScore(newScore);
+        soundManager.playBoing();
+        toast.success('BOING!', { duration: 500 });
         
-        if (landedPad && isDropping) {
-          setScore(s => s + 1);
-          soundEffects.playBoing();
-          toast.success('BOING!', { duration: 500 });
-          
-          setMossPads(pads => pads.map(p => 
-            p === landedPad ? { ...p, glowIntensity: 1 } : p
-          ));
-          setTimeout(() => {
-            setMossPads(pads => pads.map(p => 
-              p === landedPad ? { ...p, glowIntensity: 0.5 + Math.random() * 0.5 } : p
-            ));
-          }, 200);
-          
-          launch();
-          return { x: newX, y: landedPad.y - 5 };
+        // Track pad number for visual effects
+        currentPadNumberRef.current = newScore;
+        
+        // Speed boost triggers every 7th pad (permanent multiplier)
+        if (newScore > 0 && newScore % 7 === 0) {
+          speedBoostMultiplierRef.current *= 1.075;
+          soundManager.playSpeedup();
         }
         
-        return { x: newX, y: newY };
-      });
+        // Increase game speed after 24th pad with sustained multiplier
+        const baseSpeed = isMobile ? 2.2 : 2.5;
+        let progressiveSpeed = baseSpeed;
+        if (newScore > 24) {
+          const speedIncrease = Math.min((newScore - 24) * 0.02, 1.5);
+          progressiveSpeed = baseSpeed + speedIncrease;
+        }
+        worldScrollSpeedRef.current = progressiveSpeed * speedBoostMultiplierRef.current;
+        
+        // Easter egg sounds at specific scores
+        if (newScore === 451) {
+          soundManager.playShock();
+        } else if (newScore === 47) {
+          soundManager.playSpaceship();
+        } else if (newScore === 217) {
+          soundManager.playGhost();
+        } else if (newScore === 101) {
+          soundManager.playAnnoying();
+        } else if (newScore === 37) {
+          soundManager.playSuck();
+        } else if (newScore === 66) {
+          soundManager.playLightsaber();
+        } else if (newScore === 67) {
+          soundManager.playKidsLaugh();
+        } else if (newScore === 73) {
+          soundManager.playNerdy();
+        } else if (newScore === 19) {
+          soundManager.playScaryUpbeat();
+        } else if (newScore === 64) {
+          soundManager.playFiery();
+        } else if (newScore === 52) {
+          soundManager.playHulk();
+        } else if (newScore === 88 || newScore === 300) {
+          soundManager.playSword();
+        } else if (newScore === 142) {
+          soundManager.playStaircase();
+        } else if (newScore === 143) {
+          soundManager.playLove();
+        } else if (newScore === 187) {
+          soundManager.playRecordScratch();
+        } else if (newScore === 209) {
+          soundManager.playPoliceSiren();
+        } else if (newScore === 256) {
+          soundManager.playPacman();
+        } else if (newScore === 151) {
+          soundManager.playPokemon();
+        } else if (newScore === 138 || newScore === 182) {
+          soundManager.playPunkGuitar();
+        } else if (newScore === 212) {
+          soundManager.playTraffic();
+        } else if (newScore === 310) {
+          soundManager.playOcean();
+        } else if (newScore === 33) {
+          soundManager.playGodJoy();
+        } else if ([4, 8, 15, 16, 23].includes(newScore)) {
+          soundManager.playFlightDing();
+        } else if (newScore === 42) {
+          soundManager.playHumanSigh();
+        }
+        
+        // 113th jump - mushroom spin
+        if (newScore === 113) {
+          setIsSpinning(true);
+          setTimeout(() => setIsSpinning(false), 1000);
+        }
+        
+        // Deflate the previous pad if it's still visible
+        if (lastLandedPadIdRef.current !== null && lastLandedPadIdRef.current !== landedPad.id) {
+          for (let i = 0; i < mossPadsRef.current.length; i++) {
+            if (mossPadsRef.current[i].id === lastLandedPadIdRef.current) {
+              mossPadsRef.current[i].isDeflating = true;
+              break;
+            }
+          }
+        }
+        lastLandedPadIdRef.current = landedPad.id;
+        
+        // Spore burst every 7th jump
+        if (newScore % 7 === 0) {
+          const burstParticles = [];
+          for (let i = 0; i < 16; i++) {
+            burstParticles.push({
+              angle: (i * 22.5) + Math.random() * 10,
+              distance: 0,
+              opacity: 1,
+            });
+          }
+          sporeBurstRef.current = { x: mushroomPosRef.current.x + 4, y: mushroomPosRef.current.y + 4, particles: burstParticles };
+        }
+        
+        // Update glow intensity
+        for (let i = 0; i < mossPadsRef.current.length; i++) {
+          if (mossPadsRef.current[i] === landedPad) {
+            mossPadsRef.current[i].glowIntensity = 1;
+          }
+        }
+        setTimeout(() => {
+          for (let i = 0; i < mossPadsRef.current.length; i++) {
+            if (mossPadsRef.current[i] === landedPad) {
+              mossPadsRef.current[i].glowIntensity = 0.5 + Math.random() * 0.5;
+            }
+          }
+        }, 200);
+        
+        mushroomPosRef.current = { x: mushroomPosRef.current.x, y: landedPad.y - 5 };
+        
+        // 11th jump - louder launch
+        if (newScore === 11) {
+          soundManager.playLaunchLoud();
+          velocityRef.current = { x: isMobile ? 85 : 24.14, y: isMobile ? -14 : -17.8 };
+          isDroppingRef.current = false;
+        } else {
+          launch();
+        }
+      } else {
+        mushroomPosRef.current = { x: mushroomPosRef.current.x, y: newY };
+      }
       
+      // Trigger render
+      setRenderTick(t => t + 1);
       gameLoopRef.current = requestAnimationFrame(gameLoop);
     };
 
@@ -342,120 +408,106 @@ export const GameCanvas = () => {
         cancelAnimationFrame(gameLoopRef.current);
       }
     };
-  }, [gameState, velocity, isDropping, worldScrollSpeed, mossPads, score, launch, checkCollision]);
+  }, [gameState, score, launch]);
 
 
   return (
     <div 
-      className="relative w-full h-screen bg-gradient-to-b from-game-bgStart to-game-bgEnd overflow-hidden cursor-pointer select-none"
+      className="relative w-full h-screen overflow-hidden cursor-pointer select-none safe-area-container"
+      style={{
+        background: 'linear-gradient(to bottom, hsl(var(--game-bg-start)), hsl(var(--game-bg-end)))',
+      }}
       onClick={handleTap}
       onTouchStart={(e) => {
         e.preventDefault();
         handleTap();
       }}
     >
-      {/* Tutorial - only when explicitly shown */}
-      {showTutorial && (
-        <Tutorial onComplete={() => {
-          setShowTutorial(false);
-          setGameState('menu');
-        }} />
-      )}
-      
+      {/* Parallax Background System */}
+      <ParallaxBackground 
+        isPlaying={gameState === 'playing'} 
+        worldSpeed={worldScrollSpeedRef.current || (isMobile ? 2.2 : 2.5)} 
+      />
+
       {/* Score and Mute Button */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 text-6xl font-bold text-foreground z-10">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 text-6xl font-bold text-foreground z-10 drop-shadow-lg safe-area-top">
         {score}
       </div>
       <button
         onClick={(e) => {
           e.stopPropagation();
-          const newMuted = soundEffects.toggleMute();
+          const newMuted = soundManager.toggleMute();
           setIsMuted(newMuted);
         }}
-        className="absolute top-4 right-4 p-3 bg-background/50 hover:bg-background/70 rounded-full transition-colors z-10"
+        className="absolute top-4 right-4 p-3 bg-background/50 hover:bg-background/70 rounded-full transition-colors z-10 backdrop-blur-sm safe-area-top"
       >
         {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
       </button>
       
       {/* Menu Screen */}
-      {gameState === 'menu' && !showTutorial && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-background/80 backdrop-blur-sm">
-          <h1 className="text-7xl font-bold text-primary mb-8 tracking-wider">
-            MUSH-RUSH
-          </h1>
-          
-          <div className="mb-8 animate-bounce-slow">
-            <Grumblecap isDropping={false} isCrashed={false} />
-          </div>
-          
-          <div className="space-y-4">
-            <p className="text-3xl text-foreground font-bold animate-pulse">TAP TO START</p>
-            <button
-              onClick={() => setShowTutorial(true)}
-              className="px-6 py-2 text-lg text-muted-foreground hover:text-foreground underline"
-            >
-              Show Tutorial
-            </button>
-          </div>
-        </div>
-      )}
+      {gameState === 'menu' && <MenuScreen onStart={() => { hideBanner(); startGame(); }} />}
 
-      {/* Background Layer - Far (Cathedral of roots) */}
-      <div className="absolute inset-0 overflow-hidden opacity-40 blur-md">
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-game-bgStart via-accent/20 to-game-bgEnd" />
-        {/* God rays */}
-        <div className="absolute top-0 left-20 w-1 h-full bg-gradient-to-b from-foreground/10 to-transparent rotate-12 blur-sm" />
-        <div className="absolute top-0 right-32 w-1 h-full bg-gradient-to-b from-foreground/8 to-transparent -rotate-6 blur-sm" />
-      </div>
-
-      {/* Background Scenery (blurry roots/leaves) */}
-      {gameState === 'playing' && obstacles.map((obs, i) => (
-        <div
-          key={`obs-${i}`}
-          className="absolute bg-accent/60 rounded-full opacity-30 blur-sm"
-          style={{
-            left: `${obs.x}%`,
-            top: `${obs.y}%`,
-            width: `${obs.width}%`,
-            height: `${obs.height}%`,
-          }}
-        />
-      ))}
-
-      {/* Mid-ground - Glowing spores */}
-      {gameState === 'playing' && spores.map((spore, i) => (
-        <div
-          key={`spore-${i}`}
-          className="absolute rounded-full bg-game-sporeGlow blur-sm animate-pulse"
-          style={{
-            left: `${spore.x}%`,
-            top: `${spore.y}%`,
-            width: `${spore.size}px`,
-            height: `${spore.size}px`,
-            opacity: spore.opacity,
-            boxShadow: `0 0 ${spore.size * 2}px hsl(var(--spore-glow))`,
-          }}
-        />
-      ))}
-
-      {/* Game Objects */}
       {gameState === 'playing' && (
         <>
           {/* Mushroom */}
           <MemoizedGrumblecap 
-            isDropping={isDropping} 
+            isDropping={isDroppingRef.current} 
             isCrashed={false}
+            isSpinning={isSpinning}
             style={{ 
-              left: `${mushroomPos.x}%`, 
-              top: `${mushroomPos.y}%`,
-              transform: isDropping ? 'rotate(0deg)' : `rotate(${velocity.x * 5}deg)`,
+              left: `${mushroomPosRef.current.x}%`, 
+              top: `${mushroomPosRef.current.y}%`,
+              transform: isDroppingRef.current ? 'rotate(0deg)' : `rotate(${velocityRef.current.x * 5}deg)`,
+              width: isMobile ? '8%' : '5%',
+              height: isMobile ? '8%' : '5%',
             }}
           />
           
-          {/* Fungal Shelves - Bioluminescent and breathing */}
-          {mossPads.map((pad, i) => {
-            const breathScale = 1 + Math.sin(pad.breathPhase * Math.PI / 180) * 0.05;
-            const glowPulse = Math.sin(pad.breathPhase * Math.PI / 180) * 0.3 + 0.7;
+          {/* Floating Logs / Mossy Rocks - Simplified on mobile */}
+          {mossPadsRef.current.map((pad, i) => {
+            const deflateScale = pad.isDeflating ? 1 - pad.deflateProgress : 1;
+            const deflateOpacity = pad.isDeflating ? 1 - pad.deflateProgress : 1;
+            // 27th pad ever created is always faded (id 26 = 27th, 0-indexed)
+            const is27thPad = pad.id === 26;
+            const baseOpacity = is27thPad ? 0.35 : 1;
+            
+            // Mobile: Simple static pads for performance
+            if (isMobile) {
+              return (
+                <div
+                  key={`pad-${i}`}
+                  className="absolute z-10"
+                  style={{
+                    left: `${pad.x}%`,
+                    top: `${pad.y}%`,
+                    opacity: deflateOpacity * baseOpacity,
+                    transform: `scale(${deflateScale})`,
+                  }}
+                >
+                  <svg 
+                    style={{
+                      width: `${pad.width}vw`,
+                      height: `${pad.height * 1.2}vh`,
+                    }}
+                    viewBox="0 0 100 40" 
+                    preserveAspectRatio="none"
+                  >
+                    <ellipse cx="50" cy="22" rx="48" ry="16" fill="hsl(var(--log-dark))" />
+                    <ellipse cx="50" cy="20" rx="46" ry="14" fill="hsl(var(--log-color))" />
+                    <ellipse cx="50" cy="12" rx="35" ry="8" fill="hsl(var(--platform-moss))" />
+                  </svg>
+                  {score < 3 && !pad.isDeflating && (
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-foreground whitespace-nowrap bg-background/70 px-2 py-1 rounded z-20 border border-foreground/20">
+                      ↓ LAND HERE
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            
+            // Desktop: Full visual detail
+            const wobble = Math.sin(pad.breathPhase * Math.PI / 180) * 1.5;
+            const isLog = pad.id % 2 === 0;
             
             return (
               <div
@@ -463,38 +515,62 @@ export const GameCanvas = () => {
                 className="absolute transition-none z-10"
                 style={{
                   left: `${pad.x}%`,
-                  top: `${pad.y}%`,
+                  top: `${pad.y + wobble * 0.1}%`,
+                  opacity: deflateOpacity * baseOpacity,
                 }}
               >
-                <div 
-                  className="relative rounded-full"
-                  style={{
-                    width: `${pad.width}vw`,
-                    height: `${pad.height}vh`,
-                    transform: `scale(${breathScale}, ${1 / breathScale})`,
-                    transition: 'transform 0.3s ease-in-out',
-                  }}
-                >
-                  {/* Glow layer */}
-                  <div 
-                    className="absolute inset-0 rounded-full blur-md"
+                {isLog ? (
+                  <svg 
+                    className="will-change-transform"
                     style={{
-                      background: `radial-gradient(circle, hsl(var(--fungal-glow)) ${glowPulse * pad.glowIntensity * 100}%, transparent)`,
-                      boxShadow: `0 0 ${20 * pad.glowIntensity * glowPulse}px hsl(var(--fungal-glow))`,
+                      width: `${pad.width}vw`,
+                      height: `${pad.height * 1.2}vh`,
+                      transform: `scale(${deflateScale}) rotate(${wobble}deg)`,
+                      filter: 'drop-shadow(0 4px 8px hsl(0 0% 0% / 0.5))',
                     }}
-                  />
-                  {/* Shelf surface */}
-                  <div 
-                    className="absolute inset-0 rounded-full border-2"
+                    viewBox="0 0 100 40" 
+                    preserveAspectRatio="none"
+                  >
+                    <ellipse cx="50" cy="22" rx="48" ry="16" fill="hsl(var(--log-dark))" />
+                    <ellipse cx="50" cy="20" rx="46" ry="14" fill="hsl(var(--log-color))" />
+                    <path d="M15,18 Q25,15 35,18" stroke="hsl(var(--log-dark))" strokeWidth="1.5" fill="none" opacity="0.6" />
+                    <path d="M55,16 Q70,13 85,17" stroke="hsl(var(--log-dark))" strokeWidth="1.5" fill="none" opacity="0.6" />
+                    <ellipse cx="25" cy="12" rx="12" ry="5" fill="hsl(var(--platform-moss))" opacity="0.8" />
+                    <ellipse cx="65" cy="10" rx="15" ry="6" fill="hsl(var(--platform-moss))" opacity="0.9" />
+                    <ellipse cx="45" cy="8" rx="8" ry="4" fill="hsl(var(--platform-moss))" opacity="0.7" />
+                  </svg>
+                ) : (
+                  <svg 
+                    className="will-change-transform"
                     style={{
-                      background: `radial-gradient(ellipse at 50% 30%, hsl(var(--fungal-shelf)), hsl(var(--accent)))`,
-                      borderColor: `hsl(var(--fungal-glow) / ${0.3 + glowPulse * 0.4})`,
+                      width: `${pad.width}vw`,
+                      height: `${pad.height * 1.3}vh`,
+                      transform: `scale(${deflateScale}) rotate(${wobble * 0.5}deg)`,
+                      filter: 'drop-shadow(0 4px 8px hsl(0 0% 0% / 0.5))',
                     }}
-                  />
-                </div>
-                {score < 3 && (
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-primary whitespace-nowrap bg-background/80 px-2 py-1 rounded z-20">
-                    LAND HERE
+                    viewBox="0 0 100 45" 
+                    preserveAspectRatio="none"
+                  >
+                    <path 
+                      d="M5,35 C8,28 3,22 10,15 C18,8 30,5 50,5 C70,5 82,8 90,15 C97,22 92,28 95,35 C92,40 70,42 50,42 C30,42 8,40 5,35 Z"
+                      fill="hsl(var(--rock-dark))"
+                    />
+                    <path 
+                      d="M8,32 C10,26 6,20 12,14 C20,8 32,6 50,6 C68,6 80,8 88,14 C94,20 90,26 92,32 C88,36 68,38 50,38 C32,38 12,36 8,32 Z"
+                      fill="hsl(var(--rock-surface))"
+                    />
+                    <path 
+                      d="M15,25 C20,18 35,12 50,10 C65,12 80,18 85,25 C80,22 65,18 50,17 C35,18 20,22 15,25 Z"
+                      fill="hsl(var(--platform-moss))"
+                      opacity="0.9"
+                    />
+                    <ellipse cx="30" cy="15" rx="10" ry="5" fill="hsl(var(--platform-moss))" opacity="0.7" />
+                    <ellipse cx="70" cy="14" rx="8" ry="4" fill="hsl(var(--platform-moss))" opacity="0.8" />
+                  </svg>
+                )}
+                {score < 3 && !pad.isDeflating && (
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-foreground whitespace-nowrap bg-background/70 px-2 py-1 rounded z-20 border border-foreground/20">
+                    ↓ LAND HERE
                   </div>
                 )}
               </div>
@@ -503,79 +579,102 @@ export const GameCanvas = () => {
         </>
       )}
 
-      {/* Foreground - Fireflies */}
-      {gameState === 'playing' && fireflies.map((firefly, i) => {
-        const blinkIntensity = Math.max(0, Math.sin(firefly.blinkPhase * Math.PI / 180));
-        
+      {/* Foreground particle effects are now handled by ParallaxBackground */}
+
+      {/* Spore Burst Effect */}
+      {gameState === 'playing' && sporeBurstRef.current.particles.map((p, i) => {
+        const x = sporeBurstRef.current.x + Math.cos(p.angle * Math.PI / 180) * p.distance;
+        const y = sporeBurstRef.current.y + Math.sin(p.angle * Math.PI / 180) * p.distance;
+        const particleSize = isMobile ? '10px' : '8px';
         return (
           <div
-            key={`firefly-${i}`}
-            className="absolute rounded-full z-30"
+            key={`burst-${i}`}
+            className="absolute rounded-full z-40"
             style={{
-              left: `${firefly.x}%`,
-              top: `${firefly.y}%`,
-              width: `${firefly.size}px`,
-              height: `${firefly.size}px`,
-              background: `hsl(var(--firefly-blue))`,
-              opacity: firefly.opacity * blinkIntensity,
-              boxShadow: blinkIntensity > 0.5 ? `0 0 ${firefly.size * 3}px hsl(var(--firefly-blue))` : 'none',
+              left: `${x}%`,
+              top: `${y}%`,
+              width: particleSize,
+              height: particleSize,
+              background: 'hsl(var(--primary))',
+              boxShadow: isMobile ? 'none' : '0 0 12px hsl(var(--primary)), 0 0 20px hsl(var(--primary) / 0.5)',
+              opacity: p.opacity,
             }}
           />
         );
       })}
 
-      {/* Foreground - Giant raindrops */}
-      {gameState === 'playing' && raindrops.map((drop, i) => (
-        <div
-          key={`rain-${i}`}
-          className="absolute rounded-full bg-foreground/20 z-40"
-          style={{
-            left: `${drop.x}%`,
-            top: `${drop.y}%`,
-            width: `${drop.size}px`,
-            height: `${drop.size * 1.5}px`,
-            opacity: drop.opacity,
-            filter: `blur(${drop.blur}px)`,
-          }}
-        />
-      ))}
-
-      {/* Foreground - Tiny gnats */}
-      {gameState === 'playing' && gnats.map((gnat, i) => (
-        <div
-          key={`gnat-${i}`}
-          className="absolute rounded-full bg-background z-30"
-          style={{
-            left: `${gnat.x}%`,
-            top: `${gnat.y}%`,
-            width: `${gnat.size}px`,
-            height: `${gnat.size}px`,
-            opacity: gnat.opacity,
-          }}
-        />
-      ))}
-
       {/* Crash Screen */}
-      {gameState === 'crashed' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-destructive/20 backdrop-blur-sm">
-          <div className="mb-4">
-            <Grumblecap isDropping={false} isCrashed={true} />
-          </div>
-          <p className="text-4xl font-bold text-foreground mb-2">Score: {score}</p>
-          <p className="text-xl text-muted-foreground">Tap to Retry</p>
-        </div>
-      )}
+      {gameState === 'crashed' && <CrashScreen score={score} onTryAgain={() => handleTryAgain(startGame)} />}
     </div>
   );
 };
 
+// Menu Screen Component
+const MenuScreen = memo(({ onStart }: { onStart: () => void }) => {
+  useEffect(() => {
+    showSafeBanner();
+  }, []);
+
+  return (
+    <div 
+      className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-background/70 backdrop-blur-md"
+      onClick={onStart}
+      onTouchStart={(e) => {
+        e.preventDefault();
+        onStart();
+      }}
+    >
+      <h1 className="text-5xl md:text-7xl font-bold text-primary mb-8 tracking-wider drop-shadow-[0_0_30px_hsl(var(--primary)/0.5)] text-center px-4">
+        MUSH RUSH MANIA
+      </h1>
+      
+      <div className="mb-8 animate-bounce-slow">
+        <Grumblecap isDropping={false} isCrashed={false} />
+      </div>
+      
+      <p className="text-lg md:text-xl text-muted-foreground mb-2">tap to land on the logs</p>
+      <p className="text-2xl md:text-3xl text-foreground font-bold animate-pulse">TAP TO START</p>
+    </div>
+  );
+});
+
+// Crash Screen Component
+const CrashScreen = memo(({ score, onTryAgain }: { score: number; onTryAgain: () => void }) => {
+  useEffect(() => {
+    showSafeBanner();
+  }, []);
+
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-destructive/20 backdrop-blur-sm">
+      <div className="mb-4">
+        <Grumblecap isDropping={false} isCrashed={true} />
+      </div>
+      <p className="text-4xl font-bold text-foreground mb-2">Score: {score}</p>
+      <Button 
+        size="lg"
+        onClick={(e) => {
+          e.stopPropagation();
+          onTryAgain();
+        }}
+        className="text-2xl px-8 py-6 mt-4"
+      >
+        Try Again
+      </Button>
+    </div>
+  );
+});
+
 // Memoized Grumblecap wrapper to prevent unnecessary re-renders
-const MemoizedGrumblecap = memo(({ isDropping, isCrashed, style }: { 
+const MemoizedGrumblecap = memo(({ isDropping, isCrashed, isSpinning, style }: { 
   isDropping: boolean; 
   isCrashed: boolean;
+  isSpinning?: boolean;
   style?: React.CSSProperties;
 }) => (
-  <div className="absolute transition-transform z-20" style={style}>
+  <div 
+    className={`absolute transition-transform z-20 ${isSpinning ? 'animate-spin' : ''}`} 
+    style={{ ...style, animationDuration: isSpinning ? '0.3s' : undefined }}
+  >
     <Grumblecap isDropping={isDropping} isCrashed={isCrashed} />
   </div>
 ));

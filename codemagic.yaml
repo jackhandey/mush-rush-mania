@@ -1,5 +1,3 @@
-# A basic codemagic.yaml file for Ionic Capacitor (Android)
-
 workflows:
   ionic-android:
     name: Ionic Android
@@ -7,25 +5,52 @@ workflows:
 
     # Set the Node.js version here
     environment:
-<<<<<<< HEAD
-      node: 18.18.0
-
-=======
-      node: 20.10.0 # Or your project's node version
->>>>>>> 803bc32fc6b732d5f506cc3433e079b36281a6b9
+      node: 20.10.0
+      java: 21
+      groups:
+        - keystore_credentials
     scripts:
       - name: Install npm dependencies
-        script: |
+        script: | 
           npm install
+
       - name: Build Ionic app
-        script: |
+        script: | 
           npm run build
-      - name: Sync to Capacitor
-        script: |
+
+      - name: Create Android Platform
+        script: | 
+          npx cap add android
           npx cap sync android
+
+      - name: Inject AdMob ID and Permission
+        script: | 
+          # 1. Define your App ID
+          ADMOB_APP_ID="ca-app-pub-1939766549444356~7724767069"
+
+          # 2. Inject App ID: Looks for the closing </application> tag and inserts ID before it
+          sed -i '' "s|</application>|<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"$ADMOB_APP_ID\"/> </application>|g" android/app/src/main/AndroidManifest.xml
+          
+          # 3. Inject Permission: Looks for the closing </manifest> tag (at the bottom) and inserts Permission before it
+          sed -i '' 's|</manifest>|<uses-permission android:name="com.google.android.gms.permission.AD_ID"/> </manifest>|g' android/app/src/main/AndroidManifest.xml
+
+      - name: Update Version Code
+        script: | 
+          sed -i '' "s/versionCode [0-9]*/versionCode $((BUILD_NUMBER + 100))/g" android/app/build.gradle
+          echo "Updated version code to $((BUILD_NUMBER + 100))"
+
+      - name: Set up keystore
+        script: | 
+          echo $CM_KEYSTORE | base64 --decode > /tmp/keystore.jks
+
       - name: Build Android App Bundle
-        script: |
+        script: | 
           cd android
-          ./gradlew bundleRelease
+          ./gradlew bundleRelease \
+            -Pandroid.injected.signing.store.file=/tmp/keystore.jks \
+            -Pandroid.injected.signing.store.password=$CM_KEYSTORE_PASSWORD \
+            -Pandroid.injected.signing.key.alias=$CM_KEY_ALIAS \
+            -Pandroid.injected.signing.key.password=$CM_KEY_PASSWORD
+
     artifacts:
       - android/app/build/outputs/bundle/release/app-release.aab
