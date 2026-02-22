@@ -2,8 +2,8 @@ import { AdMob, BannerAdSize, BannerAdPosition } from '@capacitor-community/admo
 
 // --- CONFIGURATION ---
 // REPLACE THESE WITH YOUR REAL AD UNIT IDS!
-const BANNER_ID = 'ca-app-pub-3940256099942544/6300978111';       // <--- Test Banner ID
-const INTERSTITIAL_ID = 'ca-app-pub-3940256099942544/1033173712'; // <--- Test Interstitial ID
+const BANNER_ID = 'ca-app-pub-1939766549444356/7929703003';
+const INTERSTITIAL_ID = 'ca-app-pub-1939766549444356/7929703003'; // Not used currently
 const DEATHS_BEFORE_AD = 5; 
 
 let retryCount = 0;
