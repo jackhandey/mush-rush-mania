@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { soundManager } from '@/utils/SoundManager';
 import { Volume2, VolumeX } from 'lucide-react';
 import { Button } from './ui/button';
-import { showSafeBanner, hideBanner, handleTryAgain } from '@/AdMobController';
+import { showSafeBanner, hideBanner } from '@/AdMobController';
 
 interface MossPad {
   id: number;
@@ -604,7 +604,7 @@ export const GameCanvas = () => {
       })}
 
       {/* Crash Screen */}
-      {gameState === 'crashed' && <CrashScreen score={score} onTryAgain={() => handleTryAgain(startGame)} />}
+      {gameState === 'crashed' && <CrashScreen score={score} onTryAgain={startGame} />}
     </div>
   );
 };
