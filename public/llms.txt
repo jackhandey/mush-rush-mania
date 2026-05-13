@@ -1,0 +1,9 @@
+# MUSH-RUSH Mania
+
+> A rage-inducing tap-to-drop mushroom jumping game. Guide the grumpy Grumblecap across cursed logs and chase a high score.
+
+MUSH-RUSH Mania is a browser and mobile arcade game. Players tap to drop the mushroom onto moss-covered logs, building a score with each successful landing. Difficulty ramps up over time with faster scrolling and trickier pad placement.
+
+## Pages
+
+- [Home](/): Play the game, view your current score, and start a new run.
