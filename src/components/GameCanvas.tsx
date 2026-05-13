@@ -423,6 +423,9 @@ export const GameCanvas = () => {
         handleTap();
       }}
     >
+      {/* Persistent page heading for SEO/accessibility across all game states */}
+      <h1 className="sr-only">MUSH-RUSH Mania — High-Score Mushroom Jumping Game</h1>
+
       {/* Parallax Background System */}
       <ParallaxBackground 
         isPlaying={gameState === 'playing'} 
@@ -440,8 +443,10 @@ export const GameCanvas = () => {
           setIsMuted(newMuted);
         }}
         className="absolute top-4 right-4 p-3 bg-background/50 hover:bg-background/70 rounded-full transition-colors z-10 backdrop-blur-sm safe-area-top"
+        aria-label={isMuted ? "Unmute sound" : "Mute sound"}
+        aria-pressed={isMuted}
       >
-        {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+        {isMuted ? <VolumeX className="w-6 h-6" aria-hidden="true" /> : <Volume2 className="w-6 h-6" aria-hidden="true" />}
       </button>
       
       {/* Menu Screen */}
@@ -624,14 +629,21 @@ const MenuScreen = memo(({ onStart }: { onStart: () => void }) => {
         onStart();
       }}
     >
-      <h1 className="text-5xl md:text-7xl font-bold text-primary mb-8 tracking-wider drop-shadow-[0_0_30px_hsl(var(--primary)/0.5)] text-center px-4">
+      <h2 className="text-5xl md:text-7xl font-bold text-primary mb-6 tracking-wider drop-shadow-[0_0_30px_hsl(var(--primary)/0.5)] text-center px-4">
         MUSH RUSH MANIA
-      </h1>
-      
-      <div className="mb-8 animate-bounce-slow">
+      </h2>
+
+      <div className="mb-6 animate-bounce-slow">
         <Grumblecap isDropping={false} isCrashed={false} />
       </div>
-      
+
+      <section className="max-w-md text-center px-6 mb-6">
+        <h3 className="text-base md:text-lg font-semibold text-foreground mb-2">How to Play</h3>
+        <p className="text-sm md:text-base text-muted-foreground">
+          Tap the screen to drop Grumblecap onto the next moss-covered log. Time each tap to chain landings, dodge gaps, and chase your high score as the world scrolls faster.
+        </p>
+      </section>
+
       <p className="text-lg md:text-xl text-muted-foreground mb-2">tap to land on the logs</p>
       <p className="text-2xl md:text-3xl text-foreground font-bold animate-pulse">TAP TO START</p>
     </div>
